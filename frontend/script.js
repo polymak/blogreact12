@@ -20,33 +20,33 @@ function checkAuthAndNav() {
 
     if (!desktopNav || !mobileNav) return;
 
-    if (token) {
-        desktopNav.innerHTML = `
-            <a href="#" class="px-3 py-2 text-sm font-medium">Accueil</a>
-            <a href="dashboard.html" class="px-3 py-2 text-sm font-medium">Administration</a>
-            <button onclick="logout()" class="px-3 py-2 text-sm font-medium text-red-600">Déconnexion</button>
-        `;
+        if (token) {
+            desktopNav.innerHTML = `
+                <a href="index.html" class="px-3 py-2 text-sm font-medium">Accueil</a>
+                <a href="dashboard.html" class="px-3 py-2 text-sm font-medium">Administration</a>
+                <button onclick="logout()" class="px-3 py-2 text-sm font-medium text-red-600">Déconnexion</button>
+            `;
 
-        mobileNav.innerHTML = `
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <a href="#" class="block px-3 py-2 text-base font-medium">Accueil</a>
-                <a href="dashboard.html" class="block px-3 py-2 text-base font-medium">Administration</a>
-                <button onclick="logout()" class="block w-full text-left px-3 py-2 text-base font-medium text-red-600">Déconnexion</button>
-            </div>
-        `;
-    } else {
-        desktopNav.innerHTML = `
-            <a href="#" class="px-3 py-2 text-sm font-medium">Accueil</a>
-            <a href="login.html" class="px-3 py-2 text-sm font-medium">Connexion</a>
-        `;
+            mobileNav.innerHTML = `
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="index.html" class="block px-3 py-2 text-base font-medium">Accueil</a>
+                    <a href="dashboard.html" class="block px-3 py-2 text-base font-medium">Administration</a>
+                    <button onclick="logout()" class="block w-full text-left px-3 py-2 text-base font-medium text-red-600">Déconnexion</button>
+                </div>
+            `;
+        } else {
+            desktopNav.innerHTML = `
+                <a href="index.html" class="px-3 py-2 text-sm font-medium">Accueil</a>
+                <a href="login.html" class="px-3 py-2 text-sm font-medium">Connexion</a>
+            `;
 
-        mobileNav.innerHTML = `
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <a href="#" class="block px-3 py-2 text-base font-medium">Accueil</a>
-                <a href="login.html" class="block px-3 py-2 text-base font-medium">Connexion</a>
-            </div>
-        `;
-    }
+            mobileNav.innerHTML = `
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="index.html" class="block px-3 py-2 text-base font-medium">Accueil</a>
+                    <a href="login.html" class="block px-3 py-2 text-base font-medium">Connexion</a>
+                </div>
+            `;
+        }
 }
 
 // Logout

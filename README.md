@@ -123,24 +123,56 @@ wrangler secret put DB_PASSWORD
 wrangler secret put DB_NAME
 ```
 
-### 3. Deploy to Cloudflare
+### 3. Deploy Worker to Cloudflare
 ```bash
-# Deploy Worker
-wrangler publish
+# Navigate to worker directory
+cd BlogReact12\worker
+
+# Deploy Worker (development)
+wrangler deploy
 
 # Deploy to production environment
-wrangler publish --env=production
+wrangler deploy --env=production
 
 # Preview locally
 wrangler dev
+
+# Deploy specific environment
+wrangler deploy --env=staging
 ```
 
+**Détails d'utilisation de `wrangler deploy` :**
+- `wrangler deploy` : Déploie le Worker dans l'environnement par défaut
+- `wrangler deploy --env=production` : Déploie dans l'environnement de production
+- `wrangler deploy --env=staging` : Déploie dans l'environnement de staging
+- `wrangler dev` : Lance un serveur de développement local pour tester le Worker
+
 ### 4. Deploy Frontend to Cloudflare Pages
+```bash
+# Navigate to frontend directory
+cd BlogReact12\frontend
+
+# Deploy to Cloudflare Pages
+wrangler pages deploy .
+```
+
+**Détails d'utilisation de `wrangler pages deploy .` :**
+- `wrangler pages deploy .` : Déploie tous les fichiers du répertoire courant vers Cloudflare Pages
+- Le `.` indique le répertoire courant (frontend/)
+- Cette commande upload les fichiers statiques (HTML, CSS, JS, images)
+- Crée automatiquement une preview URL pour chaque déploiement
+- Met à jour le site en production après validation
+
+### 5. Alternative: GitHub Integration
 1. Connect your GitHub repository to Cloudflare Pages
 2. Set build settings:
    - Build command: `echo "No build needed"`
    - Build directory: `frontend`
 3. Deploy
+
+**Avantages de chaque méthode :**
+- **wrangler pages deploy .** : Déploiement direct, idéal pour les tests et déploiements rapides
+- **GitHub Integration** : Déploiement automatique sur chaque push, idéal pour la production
 
 ## Image Storage Migration
 

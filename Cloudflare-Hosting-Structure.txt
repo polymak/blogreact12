@@ -167,10 +167,10 @@ wrangler secret put DB_NAME
 ## 🌍 URLS FINALES
 
 ### Frontend (Cloudflare Pages)
-- Accueil: `https://votre-projet.pages.dev`
-- Connexion: `https://votre-projet.pages.dev/login`
-- Dashboard: `https://votre-projet.pages.dev/dashboard`
-- Article: `https://votre-projet.pages.dev/article/14`
+- Accueil: `https://votre-projet.pages.dev/index.html`
+- Connexion: `https://votre-projet.pages.dev/login.html`
+- Dashboard: `https://votre-projet.pages.dev/dashboard.html`
+- Article: `https://votre-projet.pages.dev/article.html?id=14`
 
 ### API (Cloudflare Workers)
 - Base API: `https://votre-worker.workers.dev/api`
@@ -188,13 +188,13 @@ Déjà configurés dans le Worker:
 'Access-Control-Allow-Headers': 'Content-Type, Authorization'
 ```
 
-### Clean URLs
+### URLs avec Extensions .html
 Configuration via `_redirects`:
 ```
-/accueil /index.html 200
-/login /login.html 200
-/dashboard /dashboard.html 200
-/article/* /article.html 200
+/accueil.html /index.html 200
+/login.html /login.html 200
+/dashboard.html /dashboard.html 200
+/article.html /article.html 200
 /* /index.html 200
 ```
 

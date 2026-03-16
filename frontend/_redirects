@@ -1,8 +1,0 @@
-# Cloudflare Pages redirects for clean URLs
-/accueil /index.html 200
-/login /login.html 200
-/dashboard /dashboard.html 200
-/article/* /article.html 200
-
-# Fallback to index.html for SPA routing
-/* /index.html 200
