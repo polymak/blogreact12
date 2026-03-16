@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlogReact - Accueil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .x-gradient {
+            background: linear-gradient(135deg, #1a91da, #0077b6);
+        }
+        
+        .x-text {
+            color: #1a91da;
+        }
+        
+        .x-border {
+            border-color: #1a91da;
+        }
+        
+        .article-card {
+            animation: fadeInUp 0.6s ease-out;
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        
+        .article-card.animate {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .article-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .article-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 119, 182, 0.2);
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .article-image {
+            transition: transform 0.3s ease;
+        }
+        
+        .article-hover:hover .article-image {
+            transform: scale(1.05);
+        }
+        
+        .category-badge {
+            transition: all 0.3s ease;
+        }
+        
+        .article-hover:hover .category-badge {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold x-text">BlogReact</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="/accueil" id="menu-home" class="px-3 py-2 text-sm font-medium x-text hover:x-text-hover transition-colors">Accueil</a>
+                        <a href="/login" id="menu-login" class="px-3 py-2 text-sm font-medium x-text hover:x-text-hover transition-colors">Connexion</a>
+                        <a href="/dashboard" id="menu-admin" class="px-3 py-2 text-sm font-medium x-text hover:x-text-hover transition-colors" style="display:none;">Administration</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="p-2 text-gray-500 hover:x-text">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="/accueil" id="menu-home-mobile" class="block px-3 py-2 text-base font-medium x-text hover:x-text-hover rounded-md transition-colors">Accueil</a>
+                <a href="/login" id="menu-login-mobile" class="block px-3 py-2 text-base font-medium x-text hover:x-text-hover rounded-md transition-colors">Connexion</a>
+                <a href="/dashboard" id="menu-admin-mobile" class="block px-3 py-2 text-base font-medium x-text hover:x-text-hover rounded-md transition-colors" style="display:none;">Administration</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Articles Section -->
+    <main class="py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl sm:text-4xl font-bold x-text mb-2">Articles Récents</h1>
+                <p class="text-gray-600">Découvrez les dernières publications de notre communauté</p>
+            </div>
+            
+            <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Articles will be loaded here -->
+            </div>
+            
+            <div id="no-articles" class="hidden text-center py-12">
+                <i class="fas fa-newspaper text-6xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 text-lg">Aucun article trouvé dans la base de données</p>
+            </div>
+            
+            <div id="error-message" class="hidden text-center py-12">
+                <i class="fas fa-exclamation-triangle text-6xl text-red-500 mb-4"></i>
+                <p class="text-red-600 text-lg">Erreur lors du chargement des articles</p>
+                <button onclick="loadArticles()" class="mt-4 px-4 py-2 x-gradient text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Réessayer
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">&copy; 2026 BlogReact. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const token = localStorage.getItem("token");
+
+            const loginMenu = document.getElementById("menu-login");
+            const adminMenu = document.getElementById("menu-admin");
+            const loginMenuMobile = document.getElementById("menu-login-mobile");
+            const adminMenuMobile = document.getElementById("menu-admin-mobile");
+
+            if (token) {
+                // User logged in
+                loginMenu.style.display = "none";
+                adminMenu.style.display = "inline-block";
+                loginMenuMobile.style.display = "none";
+                adminMenuMobile.style.display = "block";
+            } else {
+                // User not logged in
+                loginMenu.style.display = "inline-block";
+                adminMenu.style.display = "none";
+                loginMenuMobile.style.display = "block";
+                adminMenuMobile.style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>

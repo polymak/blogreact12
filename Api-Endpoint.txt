@@ -1,0 +1,424 @@
+API ENDPOINTS DOCUMENTATION - BLOGREACT
+==========================================
+
+Cette documentation décrit tous les endpoints API disponibles pour l'application BlogReact, spécialement conçus pour une intégration avec une application Flutter.
+
+BASE URL: https://your-worker.workers.dev
+BASE URL: /api (relative to domain)
+
+## 🔓 ENDPOINTS PUBLICS (Sans authentification)
+Ces endpoints sont accessibles sans token d'authentification, parfaits pour votre application Flutter.
+
+### 1. Récupérer tous les articles
+**Endpoint:** `GET /api/articles`
+**Description:** Récupère tous les articles publiés, triés par date décroissante
+**Paramètres:** Aucun
+**Réponse:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "titre": "Titre de l'article",
+      "contenu": "Contenu complet de l'article...",
+      "image": "/upload/image-123456789.png",
+      "auteur": "Admin",
+      "categorie": "Technologie",
+      "date": "2026-03-15T10:30:00.000Z",
+      "status": "published",
+      "views": 150,
+      "likes": 25
+    }
+  ],
+  "count": 1
+}
+```
+
+### 2. Récupérer un article par ID
+**Endpoint:** `GET /api/articles/:id`
+**Description:** Récupère un article spécifique par son ID
+**Paramètres:**
+- `id` (obligatoire): ID numérique de l'article
+**Exemple:** `/api/articles/1`
+**Réponse:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "titre": "Titre de l'article",
+    "contenu": "Contenu complet...",
+    "image": "/upload/image.png",
+    "auteur": "Admin",
+    "categorie": "Technologie",
+    "date": "2026-03-15T10:30:00.000Z",
+    "status": "published",
+    "views": 150,
+    "likes": 25
+  }
+}
+```
+
+### 3. Récupérer les articles par catégorie
+**Endpoint:** `GET /api/articles/category/:category`
+**Description:** Récupère tous les articles d'une catégorie spécifique
+**Paramètres:**
+- `category` (obligatoire): Nom de la catégorie
+**Exemple:** `/api/articles/category/Technologie`
+**Réponse:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "titre": "Article Tech 1",
+      "categorie": "Technologie",
+      ...
+    }
+  ],
+  "count": 5
+}
+```
+
+### 4. Récupérer les articles par auteur
+**Endpoint:** `GET /api/articles/author/:author`
+**Description:** Récupère tous les articles d'un auteur spécifique
+**Paramètres:**
+- `author` (obligatoire): Nom de l'auteur
+**Exemple:** `/api/articles/author/Admin`
+**Réponse:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "titre": "Article de Admin",
+      "auteur": "Admin",
+      ...
+    }
+  ],
+  "count": 3
+}
+```
+
+### 5. Récupérer les articles récents
+**Endpoint:** `GET /api/articles/recent/:limit`
+**Description:** Récupère les articles les plus récents
+**Paramètres:**
+- `limit` (obligatoire): Nombre d'articles à récupérer
+**Exemple:** `/api/articles/recent/5`
+**Réponse:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 5,
+      "titre": "Article le plus récent",
+      ...
+    }
+  ],
+  "count": 5
+}
+```
+
+### 6. Récupérer les catégories
+**Endpoint:** `GET /api/categories`
+**Description:** Récupère toutes les catégories avec le nombre d'articles par catégorie
+**Paramètres:** Aucun
+**Réponse:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "categorie": "Technologie",
+      "article_count": 15
+    },
+    {
+      "categorie": "Design",
+      "article_count": 8
+    }
+  ]
+}
+```
+
+### 7. Rechercher des articles
+**Endpoint:** `GET /api/articles/search`
+**Description:** Recherche des articles par mot-clé, catégorie ou auteur
+**Paramètres (optionnels):**
+- `q`: Mot-clé de recherche dans titre et contenu
+- `category`: Filtre par catégorie
+- `author`: Filtre par auteur
+**Exemples:**
+- `/api/articles/search?q=javascript`
+- `/api/articles/search?category=Technologie&author=Admin`
+- `/api/articles/search?q=react&category=Dev`
+**Réponse:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "titre": "React Tutorial",
+      ...
+    }
+  ],
+  "count": 2,
+  "query": {
+    "q": "react",
+    "category": "Dev"
+  }
+}
+```
+
+### 8. Récupérer les statistiques
+**Endpoint:** `GET /api/stats`
+**Description:** Récupère les statistiques générales du blog
+**Paramètres:** Aucun
+**Réponse:**
+```json
+{
+  "success": true,
+  "data": {
+    "total_articles": 25,
+    "total_categories": 8,
+    "total_authors": 3,
+    "recent_articles_30_days": 12
+  }
+}
+```
+
+### 9. Incrémenter les vues d'un article
+**Endpoint:** `POST /api/articles/:id/views`
+**Description:** Incrémente le compteur de vues d'un article
+**Paramètres:**
+- `id` (obligatoire): ID de l'article
+**Exemple:** `/api/articles/1/views`
+**Réponse:**
+```json
+{
+  "success": true,
+  "message": "Compteur de vues mis à jour"
+}
+```
+
+### 10. Incrémenter les likes d'un article
+**Endpoint:** `POST /api/articles/:id/likes`
+**Description:** Incrémente le compteur de likes d'un article
+**Paramètres:**
+- `id` (obligatoire): ID de l'article
+**Exemple:** `/api/articles/1/likes`
+**Réponse:**
+```json
+{
+  "success": true,
+  "message": "Compteur de likes mis à jour"
+}
+```
+
+## 🔐 ENDPOINTS ADMIN (Avec authentification)
+Ces endpoints nécessitent une authentification et sont principalement pour l'interface d'administration.
+
+### 11. Connexion
+**Endpoint:** `POST /login`
+**Description:** Authentification pour accéder aux endpoints admin
+**Body:**
+```json
+{
+  "username": "Admin",
+  "password": "Admin"
+}
+```
+**Réponse:**
+```json
+{
+  "success": true,
+  "message": "Connexion réussie"
+}
+```
+
+### 12. Ajouter un article
+**Endpoint:** `POST /articles`
+**Description:** Crée un nouvel article (nécessite authentification)
+**Headers:**
+- `Authorization: Bearer your_token_here`
+**Body (multipart/form-data):**
+- `titre`: Titre de l'article
+- `contenu`: Contenu de l'article
+- `auteur`: Auteur (optionnel)
+- `categorie`: Catégorie (optionnel)
+- `image`: Fichier image (optionnel)
+**Réponse:**
+```json
+{
+  "success": true,
+  "message": "Article ajouté avec succès",
+  "article": {
+    "id": 26,
+    "titre": "Nouvel article",
+    ...
+  }
+}
+```
+
+### 13. Mettre à jour un article
+**Endpoint:** `PUT /articles/:id`
+**Description:** Met à jour un article existant
+**Headers:**
+- `Authorization: Bearer your_token_here`
+**Body:** Mêmes paramètres que pour l'ajout
+**Réponse:**
+```json
+{
+  "message": "Article mis à jour avec succès",
+  "article": { ... }
+}
+```
+
+### 14. Supprimer un article
+**Endpoint:** `DELETE /articles/:id`
+**Description:** Supprime un article et son image
+**Headers:**
+- `Authorization: Bearer your_token_here`
+**Réponse:**
+```json
+{
+  "message": "Article supprimé avec succès"
+}
+```
+
+## 🚨 GESTION DES ERREURS
+
+### Codes de statut HTTP
+- `200`: Succès
+- `201`: Création réussie
+- `400`: Requête mal formée
+- `401`: Non autorisé
+- `404`: Non trouvé
+- `500`: Erreur serveur
+
+### Format d'erreur standard
+```json
+{
+  "success": false,
+  "error": "Description de l'erreur"
+}
+```
+
+## 💡 CONSEILS POUR FLUTTER
+
+### 1. Gestion des images
+**Stockage physique :** `backend/upload/` (dossier sur le serveur)
+**URL d'accès :** `/upload/` (chemin exposé par l'API)
+
+Les images sont stockées dans le dossier `backend/upload` sur le serveur, mais elles sont accessibles via l'URL :
+```dart
+String imageUrl = 'http://localhost:3000/upload/image-123456789.png';
+```
+
+**Exemple complet :**
+- Chemin serveur : `backend/upload/image-1773615269057-284225435.png`
+- URL d'accès : `http://localhost:3000/upload/image-1773615269057-284225435.png`
+
+### 2. Gestion des dates
+Les dates sont au format ISO 8601:
+```dart
+DateTime date = DateTime.parse('2026-03-15T10:30:00.000Z');
+```
+
+### 3. Pagination (à implémenter)
+Pour une meilleure performance avec Flutter, envisagez d'ajouter la pagination:
+```http
+GET /api/articles?page=1&limit=10
+```
+
+### 4. Cache côté Flutter
+Utilisez le cache pour améliorer les performances:
+```dart
+// Exemple avec http package
+final response = await http.get(Uri.parse(url));
+if (response.statusCode == 200) {
+  // Cache the response
+}
+```
+
+### 5. Gestion des erreurs dans Flutter
+```dart
+try {
+  final response = await http.get(Uri.parse(url));
+  if (response.statusCode == 200) {
+    // Traitement des données
+  } else {
+    // Gestion de l'erreur
+    final error = jsonDecode(response.body);
+    print(error['error']);
+  }
+} catch (e) {
+  print('Erreur réseau: $e');
+}
+```
+
+## 🔧 EXEMPLES D'UTILISATION AVEC FLUTTER
+
+### Récupérer tous les articles
+```dart
+Future<List<Article>> fetchArticles() async {
+  final response = await http.get(
+    Uri.parse('/api/articles')
+  );
+  
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    return (data['data'] as List)
+        .map((item) => Article.fromJson(item))
+        .toList();
+  } else {
+    throw Exception('Failed to load articles');
+  }
+}
+```
+
+### Rechercher des articles
+```dart
+Future<List<Article>> searchArticles(String query) async {
+  final response = await http.get(
+    Uri.parse('/api/articles/search?q=$query')
+  );
+  
+  // ... traitement de la réponse
+}
+```
+
+### Incrémenter les vues
+```dart
+Future<void> incrementViews(int articleId) async {
+  final response = await http.post(
+    Uri.parse('/api/articles/$articleId/views')
+  );
+  
+  if (response.statusCode != 200) {
+    print('Erreur lors de l\'incrémentation des vues');
+  }
+}
+```
+
+## 📝 NOTES IMPORTANTES
+
+1. **CORS**: L'API est configurée pour accepter toutes les origines (`Access-Control-Allow-Origin: *`)
+2. **Upload d'images**: Les images sont limitées à 5MB maximum
+3. **Formats d'images**: Seuls les fichiers images sont acceptés (jpg, png, gif, etc.)
+4. **Sécurité**: Les endpoints publics ne retournent que les articles avec `status='published'`
+5. **Performance**: Les endpoints retournent un champ `count` pour faciliter la pagination
+
+## 🚀 PROCHAINES AMÉLIORATIONS SUGGÉRÉES
+
+1. **Pagination**: Ajouter `page` et `limit` aux endpoints de liste
+2. **Filtrage avancé**: Ajouter des filtres par date, nombre de vues, etc.
+3. **Cache**: Implémenter le cache Redis pour améliorer les performances
+4. **JWT**: Mettre en place une authentification JWT plus sécurisée
+5. **Validation**: Ajouter une validation plus stricte des entrées

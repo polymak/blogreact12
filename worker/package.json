@@ -1,0 +1,32 @@
+{
+  "name": "blogreact12-api",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker API for BlogReact12",
+  "main": "worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "echo 'No build step required for this Worker'",
+    "preview": "wrangler dev --env=development",
+    "publish": "wrangler publish",
+    "publish:prod": "wrangler publish --env=production"
+  },
+  "keywords": [
+    "cloudflare",
+    "worker",
+    "api",
+    "blog",
+    "mysql"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240311.0",
+    "wrangler": "^3.0.0"
+  },
+  "dependencies": {
+    "mysql2": "^3.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

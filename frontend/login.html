@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlogReact - Connexion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .x-gradient {
+            background: linear-gradient(135deg, #1a91da, #0077b6);
+        }
+        
+        .x-text {
+            color: #1a91da;
+        }
+        
+        .x-border {
+            border-color: #1a91da;
+        }
+        
+        .login-card {
+            animation: slideIn 0.6s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .input-group {
+            transition: all 0.3s ease;
+        }
+        
+        .input-group:focus-within {
+            transform: translateX(5px);
+        }
+        
+        .btn-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 119, 182, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold x-text">BlogReact</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="/accueil" class="px-3 py-2 text-sm font-medium x-text hover:x-text-hover transition-colors">Accueil</a>
+                        <a href="#" class="px-3 py-2 text-sm font-medium x-text hover:x-text-hover transition-colors">Connexion</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="p-2 text-gray-500 hover:x-text">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="/accueil" class="block px-3 py-2 text-base font-medium x-text hover:x-text-hover rounded-md transition-colors">Accueil</a>
+                <a href="#" class="block px-3 py-2 text-base font-medium x-text hover:x-text-hover rounded-md transition-colors">Connexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="login-card bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4">
+            <div class="text-center mb-8">
+                <div class="mb-4">
+                    <h1 class="text-3xl font-bold x-text">BlogReact</h1>
+                </div>
+                <p class="text-gray-600">Connectez-vous à votre compte</p>
+            </div>
+
+            <form id="login-form" class="space-y-6">
+                <div class="input-group">
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input type="email" id="email" name="email" 
+                               class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                               placeholder="votre@email.com" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Mot de passe</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="password" name="password" 
+                               class="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                               placeholder="••••••••" required>
+                        <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <i class="fas fa-eye text-gray-400 hover:text-gray-600"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember-me" type="checkbox" 
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-700">
+                            Se souvenir de moi
+                        </label>
+                    </div>
+                    <div class="text-sm">
+                        <a href="#" class="x-text hover:x-text-hover font-medium transition-colors">
+                            Mot de passe oublié ?
+                        </a>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button type="submit" class="w-full x-gradient text-white py-3 px-4 rounded-lg font-semibold btn-hover transition-all duration-300 transform hover:scale-105">
+                        <span class="flex items-center justify-center">
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            Se connecter
+                        </span>
+                    </button>
+                    
+                    <button type="button" class="w-full bg-white border x-border text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-50 transition-all duration-300">
+                        <span class="flex items-center justify-center">
+                            <i class="fab fa-google mr-2"></i>
+                            Se connecter avec Google
+                        </span>
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">
+                    Pas encore de compte ? 
+                    <a href="#" class="x-text hover:x-text-hover font-medium transition-colors">
+                        S'inscrire
+                    </a>
+                </p>
+            </div>
+
+            <div id="error-message" class="mt-4 hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+                <p id="error-text"></p>
+            </div>
+
+            <div id="success-message" class="mt-4 hidden bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg">
+                <p>Connexion réussie ! Redirection en cours...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Mobile Navigation Toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Password toggle functionality
+        const togglePassword = document.getElementById('toggle-password');
+        const passwordInput = document.getElementById('password');
+        
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            togglePassword.innerHTML = type === 'password' ? 
+                '<i class="fas fa-eye text-gray-400 hover:text-gray-600"></i>' : 
+                '<i class="fas fa-eye-slash text-gray-400 hover:text-gray-600"></i>';
+        });
+
+        // Authentication check on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+                // Si déjà connecté, rediriger vers le dashboard
+                window.location.href = 'dashboard.html';
+            }
+        });
+
+        // Form submission
+        const loginForm = document.getElementById('login-form');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        const successMessage = document.getElementById('success-message');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Hide previous messages
+            errorMessage.classList.add('hidden');
+            successMessage.classList.add('hidden');
+            
+            // Basic validation
+            if (!email || !password) {
+                showError('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            // Simulate login process
+            try {
+                // Show loading state
+                const submitBtn = loginForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Connexion...';
+                submitBtn.disabled = true;
+                
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Check credentials (Admin/Admin)
+                if (email === 'admin@blogreact.com' && password === 'Admin123') {
+                    // Simulate successful login
+                    localStorage.setItem('auth_token', 'fake-jwt-token');
+                    showSuccess();
+                    
+                    // Redirect after success
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 2000);
+                } else {
+                    showError('Email ou mot de passe incorrect');
+                }
+                
+            } catch (error) {
+                showError('Erreur de connexion. Veuillez réessayer.');
+            }
+        });
+
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+            successMessage.classList.add('hidden');
+        }
+
+        function showSuccess() {
+            successMessage.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

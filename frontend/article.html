@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlogReact - Article</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .x-gradient {
+            background: linear-gradient(135deg, #1a91da, #0077b6);
+        }
+        
+        .x-text {
+            color: #1a91da;
+        }
+        
+        .x-border {
+            border-color: #1a91da;
+        }
+        
+        .article-image {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .article-content {
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        .btn-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 119, 182, 0.2);
+        }
+        
+        .like-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .like-btn.liked {
+            transform: scale(1.2);
+            color: #ef4444;
+        }
+        
+        .share-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .share-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .author-card {
+            transition: all 0.3s ease;
+        }
+        
+        .author-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 119, 182, 0.1);
+        }
+        
+        /* Article content paragraph styling */
+        .article-content p {
+            margin-bottom: 18px;
+            line-height: 1.7;
+            text-align: justify;
+        }
+        
+        .article-content p:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-2xl font-bold x-text">BlogReact</a>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                <a href="/accueil" id="menu-home" class="px-3 py-2 text-sm font-medium x-text hover:x-text-hover transition-colors">Accueil</a>
+                        <a href="/login" id="menu-login" class="px-3 py-2 text-sm font-medium x-text hover:x-text-hover transition-colors">Connexion</a>
+                        <a href="/dashboard" id="menu-admin" class="px-3 py-2 text-sm font-medium x-text hover:x-text-hover transition-colors" style="display:none;">Administration du site</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="p-2 text-gray-500 hover:x-text">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="/accueil" class="block px-3 py-2 text-base font-medium x-text hover:x-text-hover rounded-md transition-colors">Accueil</a>
+                <a href="/login" class="block px-3 py-2 text-base font-medium x-text hover:x-text-hover rounded-md transition-colors">Connexion</a>
+                <a href="/dashboard" class="block px-3 py-2 text-base font-medium x-text hover:x-text-hover rounded-md transition-colors">Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Article Header -->
+        <article class="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
+            <div class="article-image">
+                <img id="article-image" src="" alt="" class="w-full h-64 sm:h-96 object-cover">
+            </div>
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            <i class="fas fa-calendar-alt mr-2"></i>
+                            <span id="article-date"></span>
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-tag mr-2"></i>
+                            <span id="article-category"></span>
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button id="like-btn" class="like-btn flex items-center px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+                            <i class="far fa-heart mr-2"></i>
+                            <span id="like-count">0</span>
+                        </button>
+                        <button id="share-btn" class="share-btn flex items-center px-3 py-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-share mr-2"></i>
+                            Partager
+                        </button>
+                    </div>
+                </div>
+                
+                <h1 id="article-title" class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4"></h1>
+                
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900" id="article-author">Admin</p>
+                            <p class="text-sm text-gray-500" id="article-read-time">5 min de lecture</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-500">Vues: <span id="article-views">0</span></p>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Article Content -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <div id="article-content" class="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                <!-- Article content will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Author Section -->
+        <div class="author-card bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="flex items-center">
+                <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mr-4">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900" id="author-name">Admin</h3>
+                    <p class="text-gray-600" id="author-bio">Auteur et créateur de BlogReact</p>
+                    <div class="flex space-x-4 mt-2">
+                        <a href="#" class="text-blue-600 hover:text-blue-800">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-blue-600 hover:text-blue-800">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="#" class="text-blue-600 hover:text-blue-800">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Articles -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Articles Similaires</h2>
+            <div id="related-articles" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Related articles will be loaded here -->
+            </div>
+        </section>
+
+        <!-- Actions -->
+        <div class="flex flex-col sm:flex-row gap-4">
+            <button onclick="window.location.href='/accueil'" class="flex-1 x-gradient text-white py-3 px-6 rounded-lg font-semibold btn-hover transition-all duration-300 transform hover:scale-105">
+                <i class="fas fa-arrow-left mr-2"></i>Retour à l'accueil
+            </button>
+            <button onclick="window.location.href='/dashboard'" class="flex-1 bg-white border x-border text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-50 transition-all duration-300">
+                <i class="fas fa-edit mr-2"></i>Gérer les articles
+            </button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-6 mt-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">&copy; 2026 BlogReact. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Navigation Toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Get article ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+
+        // Load article
+        async function loadArticle() {
+            if (!articleId) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                // Use the Worker API endpoint
+                const response = await fetch(`/api/articles/${articleId}`);
+                if (!response.ok) {
+                    throw new Error('Article not found');
+                }
+                
+                const article = await response.json();
+                if (!article.success || !article.data) {
+                    throw new Error('Article not found');
+                }
+                
+                displayArticle(article.data);
+                
+            } catch (error) {
+                console.error('Error loading article:', error);
+                document.getElementById('article-content').innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-newspaper text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">Article non trouvé</p>
+                        <button onclick="window.location.href='index.html'" class="mt-4 px-4 py-2 x-gradient text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Retour à l'accueil
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Format article content with proper paragraph breaks
+        function formatArticleContent(content) {
+            if (!content || typeof content !== 'string') {
+                return '';
+            }
+            
+            // Handle multiple types of line breaks and paragraph separators
+            return content
+                // Split on double line breaks (paragraph separators)
+                .split(/\n\s*\n/)
+                // Filter out empty paragraphs
+                .filter(paragraph => paragraph.trim().length > 0)
+                // Wrap each paragraph in <p> tags
+                .map(paragraph => {
+                    // Clean up extra whitespace and single line breaks within paragraphs
+                    const cleanedParagraph = paragraph
+                        .replace(/\n/g, '<br>') // Convert single line breaks to <br> tags
+                        .replace(/\s+/g, ' ')   // Normalize whitespace
+                        .trim();
+                    
+                    return `<p>${cleanedParagraph}</p>`;
+                })
+                // Join paragraphs with newlines for better readability
+                .join('\n');
+        }
+
+        // Display article
+        function displayArticle(article) {
+            document.getElementById('article-title').textContent = article.titre;
+            
+            // Format the content with proper paragraph breaks
+            const formattedContent = formatArticleContent(article.contenu);
+            document.getElementById('article-content').innerHTML = formattedContent;
+            
+            document.getElementById('article-date').textContent = new Date(article.date).toLocaleDateString('fr-FR');
+            document.getElementById('article-category').textContent = article.categorie || 'Général';
+            document.getElementById('article-author').textContent = article.auteur || 'Admin';
+            document.getElementById('article-views').textContent = article.views || 0;
+            document.getElementById('like-count').textContent = article.likes || 0;
+
+            // Set image with proper URL handling
+            if (article.image) {
+                let imageUrl;
+                
+                // Handle different image URL formats
+                if (article.image.startsWith('http')) {
+                    // External URL (like picsum.photos)
+                    imageUrl = article.image;
+                } else if (article.image.startsWith('/upload/')) {
+                    // Local upload image - construct full URL
+                    imageUrl = 'http://localhost:3000' + article.image;
+                } else if (article.image.startsWith('upload/')) {
+                    // Local upload image without leading slash - construct full URL
+                    imageUrl = 'http://localhost:3000/' + article.image;
+                } else {
+                    // Fallback for any other format
+                    imageUrl = 'http://localhost:3000/upload/' + article.image;
+                }
+                
+                document.getElementById('article-image').src = imageUrl;
+                document.getElementById('article-image').alt = article.titre;
+                console.log('Article image URL:', imageUrl);
+                
+                // Add error handling for image loading
+                const imgElement = document.getElementById('article-image');
+                imgElement.onerror = function() {
+                    console.log('Image failed to load, using fallback');
+                    this.src = 'https://picsum.photos/seed/' + article.titre.replace(/\s+/g, '') + '/800/400';
+                    this.alt = 'Image par défaut';
+                };
+            } else {
+                document.getElementById('article-image').src = 'https://picsum.photos/seed/' + article.titre.replace(/\s+/g, '') + '/800/400';
+                document.getElementById('article-image').alt = 'Image par défaut';
+            }
+
+            // Calculate read time
+            const wordCount = article.contenu.split(' ').length;
+            const readTime = Math.ceil(wordCount / 200);
+            document.getElementById('article-read-time').textContent = `${readTime} min de lecture`;
+
+            // Load related articles
+            loadRelatedArticles(article.categorie, article.id);
+        }
+
+        // Load related articles
+        async function loadRelatedArticles(category, currentId) {
+            try {
+                // Use the Worker API endpoint for related articles
+                const response = await fetch(`/api/articles/category/${category}`);
+                const result = await response.json();
+                
+                if (result.success && result.data && result.data.length > 0) {
+                    // Filter out the current article and limit to 4
+                    const relatedArticles = result.data
+                        .filter(article => article.id != currentId)
+                        .slice(0, 4);
+                    
+                    const container = document.getElementById('related-articles');
+                    if (relatedArticles.length > 0) {
+                        container.innerHTML = relatedArticles.map(article => {
+                            // Generate proper image URL for related articles
+                            let imageUrl;
+                            
+                            if (article.image) {
+                                if (article.image.startsWith('http')) {
+                                    // External URL (like picsum.photos)
+                                    imageUrl = article.image;
+                                } else if (article.image.startsWith('/upload/')) {
+                                    // Local upload image - construct full URL
+                                    imageUrl = 'http://localhost:3000' + article.image;
+                                } else if (article.image.startsWith('upload/')) {
+                                    // Local upload image without leading slash - construct full URL
+                                    imageUrl = 'http://localhost:3000/' + article.image;
+                                } else {
+                                    // Fallback for any other format
+                                    imageUrl = 'http://localhost:3000/upload/' + article.image;
+                                }
+                            } else {
+                                // Placeholder image if no image
+                                imageUrl = 'https://via.placeholder.com/400x250/1a91da/ffffff?text=No+Image';
+                            }
+                            
+                            return `
+                                <article onclick="viewArticle('${article.id}')" class="bg-gray-50 rounded-xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 card-hover">
+                                    <img src="${imageUrl}" alt="${article.titre}" class="w-full h-40 object-cover rounded-lg mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">${article.titre}</h3>
+                                    <p class="text-gray-600 mb-4 line-clamp-3">${article.contenu.substring(0, 150)}...</p>
+                                    <div class="flex items-center justify-between text-sm text-gray-500">
+                                        <span>${new Date(article.date).toLocaleDateString('fr-FR')}</span>
+                                        <span>${article.auteur || 'Admin'}</span>
+                                    </div>
+                                </article>
+                            `;
+                        }).join('');
+                    } else {
+                        container.innerHTML = `
+                            <p class="text-gray-500 col-span-2 text-center py-8">Aucun article similaire trouvé</p>
+                        `;
+                    }
+                } else {
+                    document.getElementById('related-articles').innerHTML = `
+                        <p class="text-gray-500 col-span-2 text-center py-8">Erreur lors du chargement des articles similaires</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading related articles:', error);
+                document.getElementById('related-articles').innerHTML = `
+                    <p class="text-gray-500 col-span-2 text-center py-8">Erreur lors du chargement des articles similaires</p>
+                `;
+            }
+        }
+
+        // View article function
+        window.viewArticle = function(articleId) {
+            window.location.href = `article.html?id=${articleId}`;
+        };
+
+        // Like functionality
+        const likeBtn = document.getElementById('like-btn');
+        const likeCount = document.getElementById('like-count');
+
+        likeBtn.addEventListener('click', () => {
+            likeBtn.classList.toggle('liked');
+            const currentCount = parseInt(likeCount.textContent);
+            likeCount.textContent = likeBtn.classList.contains('liked') ? currentCount + 1 : currentCount - 1;
+        });
+
+        // Share functionality
+        const shareBtn = document.getElementById('share-btn');
+
+        shareBtn.addEventListener('click', () => {
+            shareBtn.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                shareBtn.style.transform = 'scale(1)';
+            }, 200);
+
+            if (navigator.share) {
+                navigator.share({
+                    title: document.getElementById('article-title').textContent,
+                    text: 'Découvrez cet article intéressant sur BlogReact !',
+                    url: window.location.href
+                });
+            } else {
+                // Fallback for browsers that don't support Web Share API
+                const url = window.location.href;
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('URL copiée dans le presse-papier !');
+                });
+            }
+        });
+
+        // Check admin authentication and hide/show admin button
+        function checkAdminAuth() {
+            const adminBtn = document.querySelector('button[onclick*="dashboard.html"]');
+            if (!adminBtn) return;
+
+            // Check if user is authenticated (you can adjust this based on your auth method)
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            // Show admin button only if user is authenticated
+            if (!token && !user) {
+                adminBtn.style.display = 'none';
+            }
+        }
+
+        // Update navigation menu based on authentication status
+        function updateNavigationMenu() {
+            const token = localStorage.getItem('token');
+            const loginMenu = document.getElementById('menu-login');
+            const adminMenu = document.getElementById('menu-admin');
+
+            if (!loginMenu || !adminMenu) {
+                console.warn('Navigation menu elements not found');
+                return;
+            }
+
+            if (token) {
+                // User logged in
+                loginMenu.style.display = 'none';
+                adminMenu.style.display = 'inline-block';
+            } else {
+                // User not logged in
+                loginMenu.style.display = 'inline-block';
+                adminMenu.style.display = 'none';
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            updateNavigationMenu();
+            checkAdminAuth();
+            loadArticle();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+FLUTTER APP USER FLOW DOCUMENTATION
+======================================
+
+Cette documentation décrit le flux utilisateur complet de l'application Flutter BlogReact, basée sur l'API REST.
+
+BASE URL API: https://your-worker.workers.dev
+BASE URL API: /api (relative to domain)
+
+## 🚀 FLUX UTILISATEUR COMPLET
+
+### 1. LANCEMENT DE L'APPLICATION
+
+**Écran: Accueil (HomeScreen)**
+- **Comportement au lancement:**
+  - L'application affiche automatiquement les **derniers articles** (endpoint: `GET /api/articles`)
+  - Chargement des articles avec animation de fadeIn
+  - Affichage en grille responsive (1 colonne mobile, 2 colonnes tablette, 3 colonnes desktop)
+  - Gestion des erreurs avec message d'erreur et bouton "Réessayer"
+
+**UI Components:**
+- AppBar avec titre "BlogReact"
+- Icône menu hamburger (☰) à gauche
+- Icône profil/utilisateur à droite
+- GridView/Liste d'articles avec:
+  - Image de couverture
+  - Titre
+  - Auteur
+  - Date
+  - Catégorie
+  - Nombre de vues et likes
+
+### 2. MENU NAVIGATION
+
+**Action: Clic sur icône menu (☰)**
+
+**Écran: MenuDrawer**
+- **Options disponibles:**
+  1. **Accueil** → Retour à HomeScreen
+  2. **Connexion** → Accès à LoginScreen
+  3. **Catégories** → Liste des catégories (endpoint: `GET /api/categories`)
+  4. **Recherche** → Barre de recherche (endpoint: `GET /api/articles/search`)
+  5. **À propos** → Informations sur l'application
+
+**Fermeture du menu:**
+- Clic en dehors du menu ou appui sur retour Android
+
+### 3. CONNEXION UTILISATEUR
+
+**Action: Clic sur "Connexion" dans le menu**
+
+**Écran: LoginScreen**
+- **Champs requis:**
+  - Username (TextField)
+  - Password (TextField avec obscureText)
+  - Bouton "Se Connecter"
+
+**Processus de connexion:**
+```dart
+Future<void> loginUser(String username, String password) async {
+  final response = await http.post(
+    Uri.parse('/api/login'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'username': username,
+      'password': password
+    })
+  );
+  
+  if (response.statusCode == 200) {
+    // Connexion réussie
+    // Stocker le token/jeton de session
+    // Rediriger vers DashboardScreen
+  } else {
+    // Afficher message d'erreur
+  }
+}
+```
+
+**Identifiants par défaut:**
+- Admin: username: "Admin", password: "Admin"
+- Editor: username: "editor", password: "editor"
+
+**Retour à l'accueil:**
+- Clic sur flèche retour ou "Retour à l'accueil"
+
+### 4. TABLEAU DE BORD ADMINISTRATION
+
+**Action: Après connexion réussie**
+
+**Écran: DashboardScreen**
+- **Message de bienvenue:**
+  - "Bienvenue dans l'administration, [NOM_UTILISATEUR] !"
+  - Affichage du nom d'utilisateur connecté
+  - Icône de déconnexion
+
+- **Statistiques affichées (endpoint: `GET /api/stats`):**
+  - Nombre total d'articles
+  - Nombre de catégories
+  - Nombre d'auteurs
+  - Articles publiés ce mois-ci
+
+**UI Components:**
+- AppBar avec titre "Administration"
+- Icône menu hamburger
+- Icône déconnexion
+- Cards de statistiques
+- Bouton "Gérer les articles"
+
+### 5. MENU ADMINISTRATION
+
+**Action: Clic sur icône menu dans le dashboard**
+
+**Écran: AdminMenuDrawer**
+- **Options disponibles:**
+  1. **Tableau de bord** → Retour à DashboardScreen
+  2. **Liste des articles** → ArticleListScreen
+  3. **Ajouter article** → ArticleFormScreen (mode création)
+  4. **Catégories** → Gestion des catégories
+  5. **Statistiques détaillées** → AnalyticsScreen
+  6. **Déconnexion** → Retour à HomeScreen
+
+### 6. GESTION DES ARTICLES
+
+**Action: Clic sur "Liste des articles"**
+
+**Écran: ArticleListScreen**
+- **Affichage:**
+  - Liste des articles avec:
+    - Image miniature
+    - Titre
+    - Auteur
+    - Catégorie
+    - Statut (publié/brouillon)
+    - Date de création
+    - Nombre de vues et likes
+
+- **Fonctionnalités:**
+  - **Recherche** par titre/catégorie/auteur
+  - **Filtrage** par statut (publié, brouillon, archivé)
+  - **Tri** par date, titre, vues
+  - **Actions par article:**
+    - Modifier (ouvre ArticleFormScreen en mode édition)
+    - Supprimer (avec confirmation)
+    - Publier/Dépublier
+    - Voir en ligne (ouvre dans navigateur)
+
+**Endpoints utilisés:**
+- `GET /api/articles` - Charger tous les articles
+- `GET /api/articles/search` - Recherche et filtrage
+- `PUT /articles/:id` - Mise à jour
+- `DELETE /articles/:id` - Suppression
+
+### 7. CRÉATION/MODIFICATION D'ARTICLE
+
+**Action: Clic sur "Ajouter article" ou "Modifier"**
+
+**Écran: ArticleFormScreen**
+- **Champs du formulaire:**
+  - Titre (obligatoire)
+  - Contenu (obligatoire, TextField multiline)
+  - Auteur (pré-rempli avec utilisateur connecté)
+  - Catégorie (DropdownButton avec catégories existantes)
+  - Image (bouton "Choisir image" → Gallery/Camera)
+  - Statut (publié/brouillon)
+
+- **Fonctionnalités:**
+  - Upload d'image (multipart/form-data)
+  - Aperçu de l'image sélectionnée
+  - Validation des champs
+  - Enregistrement (endpoint: `POST /articles` ou `PUT /articles/:id`)
+
+**Processus d'upload:**
+```dart
+Future<String?> uploadImage(File imageFile) async {
+  var request = http.MultipartRequest(
+    'POST',
+    Uri.parse('/api/articles')
+  );
+  
+  request.files.add(
+    await http.MultipartFile.fromPath('image', imageFile.path)
+  );
+  
+  request.fields['titre'] = titre;
+  request.fields['contenu'] = contenu;
+  // ... autres champs
+  
+  var response = await request.send();
+  if (response.statusCode == 200) {
+    // Succès
+  }
+}
+```
+
+### 8. LECTURE D'ARTICLE
+
+**Action: Clic sur un article depuis HomeScreen**
+
+**Écran: ArticleDetailScreen**
+- **Affichage:**
+  - Image pleine largeur
+  - Titre
+  - Auteur et date
+  - Catégorie
+  - Contenu complet
+  - Compteurs de vues et likes
+
+- **Fonctionnalités:**
+  - **Incrémenter vues** (endpoint: `POST /api/articles/:id/views`)
+  - **Incrémenter likes** (endpoint: `POST /api/articles/:id/likes`)
+  - **Partager** (Share plugin)
+  - **Retour** (flèche retour)
+
+### 9. RECHERCHE D'ARTICLES
+
+**Action: Clic sur "Recherche" dans le menu**
+
+**Écran: SearchScreen**
+- **Champs:**
+  - Barre de recherche (mot-clé)
+  - Filtres par catégorie (Checkbox)
+  - Filtres par auteur (Checkbox)
+  - Bouton "Rechercher"
+
+- **Résultats:**
+  - Affichage en grille comme HomeScreen
+  - Pagination (page suivante/précédente)
+
+**Endpoint:** `GET /api/articles/search?q=terme&category=cat&author=aut`
+
+### 10. GESTION DES CATÉGORIES
+
+**Action: Clic sur "Catégories"**
+
+**Écran: CategoryScreen**
+- **Affichage:**
+  - Liste des catégories avec nombre d'articles
+  - Pourcentage de couverture
+
+- **Fonctionnalités:**
+  - Filtrer les articles par catégorie
+  - Créer nouvelle catégorie (si admin)
+  - Supprimer catégorie (si admin)
+
+**Endpoint:** `GET /api/categories`
+
+## 🔄 FLUX COMPLET TYPE
+
+```
+Lancement App → HomeScreen (derniers articles)
+    ↓
+Clic Menu → MenuDrawer
+    ↓
+Clic Connexion → LoginScreen
+    ↓
+Connexion Réussie → DashboardScreen (bienvenue)
+    ↓
+Clic Menu → AdminMenuDrawer
+    ↓
+Clic Liste Articles → ArticleListScreen
+    ↓
+Clic Modifier → ArticleFormScreen
+    ↓
+Enregistrement → Retour ArticleListScreen
+    ↓
+Clic Article → ArticleDetailScreen
+    ↓
+Retour → HomeScreen
+```
+
+## 📱 GESTION DES ÉTATS
+
+### Authentification
+- **Stockage token:** SharedPreferences ou SecureStorage
+- **Vérification session:** Au lancement de l'app
+- **Expiration:** Gestion des tokens expirés
+
+### Données
+- **Cache:** Mise en cache des articles pour offline
+- **Synchronisation:** Rafraîchissement périodique
+- **Erreurs réseau:** Messages d'erreur appropriés
+
+## 🎨 DESIGN SYSTEM
+
+### Couleurs (Inspiration x.com)
+- **Bleu primaire:** #1a91da
+- **Bleu foncé:** #0077b6
+- **Texte:** #333333
+- **Arrière-plan:** #f8f9fa
+- **Cartes:** #ffffff
+
+### Typographie
+- **Titres:** Inter Bold
+- **Corps:** Inter Regular
+- **Petits textes:** Inter Light
+
+### Animations
+- **Transitions:** SlideRight/SlideLeft
+- **Chargement:** Skeleton loaders
+- **Interactions:** Scale effects on tap
+
+## 🔧 IMPLEMENTATION TIPS
+
+### State Management
+- **Provider** ou **Bloc** pour la gestion d'état
+- **Riverpod** pour une architecture plus moderne
+
+### Performance
+- **Lazy loading** pour les images
+- **Pagination** pour les longues listes
+- **Debounce** pour la recherche
+
+### Sécurité
+- **HTTPS** en production
+- **Validation** des entrées côté client et serveur
+- **Gestion des erreurs** appropriée
+
+Cette documentation fournit le blueprint complet pour développer l'application Flutter BlogReact avec une expérience utilisateur fluide et intuitive.
