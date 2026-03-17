@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Upload Image</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+        <h1 class="text-2xl font-bold text-center mb-6">Test Upload Image</h1>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Sélectionner une image</label>
+            <input type="file" id="test-image" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+        </div>
+
+        <div id="preview" class="mb-4 hidden">
+            <img id="preview-img" class="max-w-full h-auto rounded">
+        </div>
+
+        <button onclick="testUpload()" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors">
+            Tester l'upload
+        </button>
+
+        <div id="result" class="mt-4 p-3 bg-gray-50 rounded-md hidden">
+            <h3 class="font-semibold mb-2">Résultat:</h3>
+            <p id="result-text" class="text-sm"></p>
+        </div>
+    </div>
+
+    <script>
+        // Upload image to Cloudflare Workers (same function as in dashboard)
+        async function uploadImage(file) {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const res = await fetch("https://blogreact12-api.your-worker.workers.dev/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await res.json();
+            return data.url;
+        }
+
+        // Preview image
+        document.getElementById('test-image').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('preview-img').src = e.target.result;
+                    document.getElementById('preview').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Test upload function
+        async function testUpload() {
+            const fileInput = document.getElementById('test-image');
+            const resultDiv = document.getElementById('result');
+            const resultText = document.getElementById('result-text');
+
+            if (!fileInput.files[0]) {
+                alert('Veuillez sélectionner une image');
+                return;
+            }
+
+            try {
+                resultText.textContent = 'Upload en cours...';
+                resultDiv.classList.remove('hidden');
+                
+                const imageUrl = await uploadImage(fileInput.files[0]);
+                
+                resultText.innerHTML = `
+                    <span class="text-green-600">Upload réussi!</span><br>
+                    URL: <a href="${imageUrl}" target="_blank" class="text-blue-500 hover:underline">${imageUrl}</a><br>
+                    <img src="${imageUrl}" alt="Uploaded image" class="mt-2 max-w-full h-auto rounded">
+                `;
+            } catch (error) {
+                resultText.innerHTML = `
+                    <span class="text-red-600">Erreur lors de l'upload:</span><br>
+                    ${error.message}
+                `;
+                resultDiv.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
