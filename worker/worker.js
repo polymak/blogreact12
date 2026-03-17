@@ -1,6 +1,6 @@
 /**
  * BlogReact12 Worker API
- * Cloudflare Workers + D1
+ * Cloudflare Workers + D1 + R2
  */
 
 const CORS_HEADERS = {
@@ -35,30 +35,23 @@ function authenticateToken(request) {
   if (!authHeader) return false;
 
   const token = authHeader.split(" ")[1];
-  if (token !== "demo-token") return false;
-
-  return true;
+  return token === "demo-token";
 }
 
 /* ---------------- ROUTE MATCHER ---------------- */
 
 function matchRoute(request, routes) {
-
   const url = new URL(request.url);
   const path = url.pathname;
 
   for (const [pattern, handler] of Object.entries(routes)) {
-
     const [method, routePattern] = pattern.split(" ");
-
     if (method !== request.method) continue;
 
     const regex = new RegExp("^" + routePattern.replace(/:[^/]+/g, "([^/]+)") + "$");
-
     const match = path.match(regex);
 
     if (match) {
-
       const params = {};
       const names = routePattern.match(/:([^/]+)/g);
 
@@ -90,7 +83,47 @@ export default {
 
     const routes = {
 
-      /* GET ARTICLES */
+      /* ================= UPLOAD IMAGE (R2) ================= */
+
+      "POST /api/upload": async request => {
+
+        if (!authenticateToken(request)) {
+          return json({ error: "Unauthorized" }, 401);
+        }
+
+        try {
+
+          const formData = await request.formData();
+          const file = formData.get("file");
+
+          if (!file) {
+            return json({ success: false, error: "No file provided" }, 400);
+          }
+
+          const fileName = `${Date.now()}-${file.name}`;
+
+          await env.IMAGES.put(fileName, file.stream(), {
+            httpMetadata: {
+              contentType: file.type
+            }
+          });
+
+          const imageUrl = `https://pub-be96ecf581d24e5f981ad2a9ca70fe6e.r2.dev/${fileName}`;
+
+          return json({
+            success: true,
+            url: imageUrl
+          });
+
+        } catch (e) {
+          return json({
+            success: false,
+            error: e.message
+          }, 500);
+        }
+      },
+
+      /* ================= GET ARTICLES ================= */
 
       "GET /api/articles": async () => {
 
@@ -126,7 +159,7 @@ export default {
 
       },
 
-      /* GET ARTICLE BY ID */
+      /* ================= GET ARTICLE ================= */
 
       "GET /api/articles/:id": async (req, params) => {
 
@@ -161,7 +194,7 @@ export default {
 
       },
 
-      /* CREATE ARTICLE */
+      /* ================= CREATE ARTICLE ================= */
 
       "POST /api/articles": async request => {
 
@@ -203,7 +236,7 @@ export default {
 
       },
 
-      /* UPDATE ARTICLE */
+      /* ================= UPDATE ARTICLE ================= */
 
       "PUT /api/articles/:id": async (req, params) => {
 
@@ -230,8 +263,7 @@ export default {
           .run();
 
           return json({
-            success: true,
-            message: "Article mis à jour"
+            success: true
           });
 
         } catch (e) {
@@ -245,7 +277,7 @@ export default {
 
       },
 
-      /* DELETE ARTICLE */
+      /* ================= DELETE ================= */
 
       "DELETE /api/articles/:id": async (req, params) => {
 
@@ -262,8 +294,7 @@ export default {
           .run();
 
           return json({
-            success: true,
-            message: "Article supprimé"
+            success: true
           });
 
         } catch (e) {
@@ -277,7 +308,7 @@ export default {
 
       },
 
-      /* LOGIN */
+      /* ================= LOGIN ================= */
 
       "POST /api/login": async request => {
 
@@ -318,6 +349,8 @@ export default {
       }
 
     };
+
+    /* ---------------- API HANDLER ---------------- */
 
     if (url.pathname.startsWith("/api")) {
 

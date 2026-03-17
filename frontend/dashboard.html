@@ -243,7 +243,6 @@
 
 const API_URL = "https://blogreact12-api.reatest.workers.dev";
 
-// State
 let articles = [];
 let editingArticle = null;
 
@@ -251,6 +250,8 @@ let editingArticle = null;
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     loadArticles();
+
+    document.getElementById("image").addEventListener("change", previewImage);
 });
 
 // AUTH
@@ -259,28 +260,59 @@ function checkAuth() {
     if (!token) window.location.href = 'login.html';
 }
 
-// ================= LOAD ARTICLES =================
+// ================= LOAD =================
 async function loadArticles() {
     try {
         const res = await fetch(`${API_URL}/api/articles`);
         const data = await res.json();
 
-        if (!data.success) throw new Error();
-
         articles = data.data;
 
-        updateStats();
         renderArticles();
 
-    } catch (err) {
-        showToast("Erreur chargement articles", "error");
+    } catch {
+        alert("Erreur chargement");
     }
+}
+
+// ================= UPLOAD =================
+async function uploadImage(file) {
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(`${API_URL}/api/upload`, {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("auth_token")
+        },
+        body: formData
+    });
+
+    const data = await res.json();
+
+    if (!data.success) throw new Error();
+
+    return data.url;
+}
+
+// ================= PREVIEW =================
+function previewImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function (event) {
+        document.getElementById("preview-img").src = event.target.result;
+        document.getElementById("image-preview").classList.remove("hidden");
+    };
+
+    reader.readAsDataURL(file);
 }
 
 // ================= DELETE =================
 async function deleteArticle(id) {
-    if (!confirm("Supprimer ?")) return;
-
     await fetch(`${API_URL}/api/articles/${id}`, {
         method: "DELETE",
         headers: {
@@ -291,38 +323,27 @@ async function deleteArticle(id) {
     loadArticles();
 }
 
-// ================= SAVE (FIX PRINCIPAL) =================
+// ================= SAVE =================
 document.getElementById('article-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const titre = document.getElementById('title').value;
     const contenu = document.getElementById('content').value;
 
-    // 👉 image simple (URL placeholder pour éviter bug)
     let image = "";
 
-    if (document.getElementById('preview-img').src) {
-        image = document.getElementById('preview-img').src;
-    }
-
-    const payload = {
-        titre,
-        contenu,
-        image,
-        auteur: "Admin",
-        categorie: "General"
-    };
+    const file = document.getElementById('image').files[0];
 
     try {
 
-        const url = editingArticle
-            ? `${API_URL}/api/articles/${editingArticle.id}`
-            : `${API_URL}/api/articles`;
+        if (file) {
+            image = await uploadImage(file);
+        }
 
-        const method = editingArticle ? "PUT" : "POST";
+        const payload = { titre, contenu, image };
 
-        const res = await fetch(url, {
-            method,
+        await fetch(`${API_URL}/api/articles`, {
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": "Bearer " + localStorage.getItem("auth_token")
@@ -330,39 +351,16 @@ document.getElementById('article-form').addEventListener('submit', async (e) => 
             body: JSON.stringify(payload)
         });
 
-        const data = await res.json();
+        alert("Article publié");
 
-        if (!data.success) throw new Error();
-
-        showToast(editingArticle ? "Article modifié" : "Article publié");
-
-        editingArticle = null;
-
+        document.getElementById("article-form").reset();
         loadArticles();
         showBlogList();
 
-    } catch (err) {
-        showToast("Erreur sauvegarde", "error");
+    } catch {
+        alert("Erreur");
     }
 });
-
-// ================= EDIT =================
-function handleEdit(id) {
-    const article = articles.find(a => a.id == id);
-    if (!article) return;
-
-    editingArticle = article;
-
-    document.getElementById('title').value = article.titre;
-    document.getElementById('content').value = article.contenu;
-
-    if (article.image) {
-        document.getElementById('preview-img').src = article.image;
-        document.getElementById('image-preview').classList.remove('hidden');
-    }
-
-    showAddForm();
-}
 
 // ================= RENDER =================
 function renderArticles() {
@@ -370,21 +368,18 @@ function renderArticles() {
     const container = document.getElementById('articles-container');
 
     container.innerHTML = articles.map(a => `
-        <div class="bg-gray-50 p-4 rounded-lg">
-            <h3 class="font-bold">${a.titre}</h3>
-            <p>${a.contenu}</p>
+        <div class="bg-gray-50 p-4 rounded-lg flex gap-4 items-center">
 
-            <div class="flex gap-2 mt-2">
-                <button onclick="handleEdit(${a.id})" class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button>
-                <button onclick="deleteArticle(${a.id})" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
+            ${a.image ? `<img src="${a.image}" class="w-32 h-32 object-cover rounded">` : ""}
+
+            <div>
+                <h3 class="font-bold">${a.titre}</h3>
+                <p>${a.contenu}</p>
+
+                <button onclick="deleteArticle(${a.id})">Delete</button>
             </div>
         </div>
     `).join('');
-}
-
-// ================= STATS =================
-function updateStats() {
-    document.getElementById('total-articles').innerText = articles.length;
 }
 
 // ================= UI =================
@@ -401,23 +396,6 @@ function showAddForm() {
 function logout() {
     localStorage.removeItem("auth_token");
     window.location.href = "login.html";
-}
-
-// ================= TOAST =================
-function showToast(msg, type = "success") {
-    const toast = document.getElementById('toast');
-    const text = document.getElementById('toast-message');
-
-    text.innerText = msg;
-
-    toast.classList.remove('hidden');
-    toast.classList.remove('translate-y-10');
-
-    toast.classList.add(type === "error" ? "bg-red-500" : "bg-green-500");
-
-    setTimeout(() => {
-        toast.classList.add('translate-y-10');
-    }, 3000);
 }
 
 </script>
