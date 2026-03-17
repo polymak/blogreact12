@@ -39,7 +39,7 @@ BASE URL API: /api (relative to domain)
   2. **Connexion** → Accès à LoginScreen
   3. **Catégories** → Liste des catégories (endpoint: `GET /api/categories`)
   4. **Recherche** → Barre de recherche (endpoint: `GET /api/articles/search`)
-  5. **À propos** → Informations sur l'application
+
 
 **Fermeture du menu:**
 - Clic en dehors du menu ou appui sur retour Android

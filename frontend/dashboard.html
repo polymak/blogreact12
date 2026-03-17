@@ -250,6 +250,8 @@ let editingArticle = null;
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     loadArticles();
+    showBlogList();
+
     document.getElementById("image").addEventListener("change", previewImage);
 });
 
@@ -261,10 +263,19 @@ function checkAuth() {
 
 // ================= LOAD =================
 async function loadArticles() {
-    const res = await fetch(`${API_URL}/api/articles`);
-    const data = await res.json();
-    articles = data.data;
-    renderArticles();
+    try {
+        const res = await fetch(`${API_URL}/api/articles`);
+        const data = await res.json();
+
+        articles = data.data || [];
+        renderArticles();
+
+        document.getElementById("total-articles").innerText = articles.length;
+
+    } catch (err) {
+        console.error(err);
+        showToast("❌ Erreur chargement", true);
+    }
 }
 
 // ================= UPLOAD =================
@@ -281,7 +292,9 @@ async function uploadImage(file) {
     });
 
     const data = await res.json();
-    if (!data.success) throw new Error();
+
+    if (!data.success) throw new Error("Upload failed");
+
     return data.url;
 }
 
@@ -302,7 +315,6 @@ function previewImage(e) {
 
 // ================= DELETE =================
 async function deleteArticle(id) {
-
     if (!confirm("Supprimer cet article ?")) return;
 
     await fetch(`${API_URL}/api/articles/${id}`, {
@@ -312,6 +324,7 @@ async function deleteArticle(id) {
         }
     });
 
+    showToast("🗑️ Supprimé");
     loadArticles();
 }
 
@@ -319,7 +332,6 @@ async function deleteArticle(id) {
 function handleEdit(id) {
 
     const article = articles.find(a => a.id == id);
-
     editingArticle = article;
 
     document.getElementById("title").value = article.titre;
@@ -331,6 +343,7 @@ function handleEdit(id) {
     }
 
     document.getElementById("form-title").innerText = "Modifier Article";
+    document.getElementById("submit-btn-text").innerText = "Modifier";
 
     showAddForm();
 }
@@ -343,7 +356,6 @@ document.getElementById('article-form').addEventListener('submit', async (e) => 
     const contenu = document.getElementById('content').value;
 
     let image = editingArticle ? editingArticle.image : "";
-
     const file = document.getElementById('image').files[0];
 
     try {
@@ -352,11 +364,16 @@ document.getElementById('article-form').addEventListener('submit', async (e) => 
             image = await uploadImage(file);
         }
 
-        const payload = { titre, contenu, image };
+        const payload = {
+            title: titre,
+            content: contenu,
+            image: image
+        };
+
+        let res;
 
         if (editingArticle) {
-
-            await fetch(`${API_URL}/api/articles/${editingArticle.id}`, {
+            res = await fetch(`${API_URL}/api/articles/${editingArticle.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -364,12 +381,8 @@ document.getElementById('article-form').addEventListener('submit', async (e) => 
                 },
                 body: JSON.stringify(payload)
             });
-
-            alert("Article modifié");
-
         } else {
-
-            await fetch(`${API_URL}/api/articles`, {
+            res = await fetch(`${API_URL}/api/articles`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -377,20 +390,27 @@ document.getElementById('article-form').addEventListener('submit', async (e) => 
                 },
                 body: JSON.stringify(payload)
             });
-
-            alert("Article publié");
         }
 
-        editingArticle = null;
+        if (res.ok) {
 
-        document.getElementById("article-form").reset();
-        document.getElementById("image-preview").classList.add("hidden");
+            showToast("✅ Article enregistré");
 
-        loadArticles();
-        showBlogList();
+            editingArticle = null;
 
-    } catch {
-        alert("Erreur");
+            document.getElementById("article-form").reset();
+            document.getElementById("image-preview").classList.add("hidden");
+
+            await loadArticles();
+            showBlogList();
+
+        } else {
+            showToast("❌ Erreur API", true);
+        }
+
+    } catch (err) {
+        console.error(err);
+        showToast("❌ Erreur réseau", true);
     }
 });
 
@@ -406,7 +426,7 @@ function renderArticles() {
 
             <div class="flex-1">
                 <h3 class="font-bold text-lg">${a.titre}</h3>
-                <p class="text-sm text-gray-600">${a.contenu}</p>
+                <p class="text-sm text-gray-600">${a.contenu.substring(0,150)}...</p>
 
                 <div class="flex gap-2 mt-2">
                     <button onclick="handleEdit(${a.id})" class="bg-blue-500 text-white px-3 py-1 rounded">
@@ -434,9 +454,36 @@ function showAddForm() {
     document.getElementById('add-form').classList.remove('hidden');
 }
 
+function cancelEdit() {
+    editingArticle = null;
+    document.getElementById("article-form").reset();
+    document.getElementById("image-preview").classList.add("hidden");
+    showBlogList();
+}
+
 function logout() {
     localStorage.removeItem("auth_token");
     window.location.href = "login.html";
+}
+
+// ================= TOAST =================
+function showToast(message, isError = false) {
+
+    const toast = document.getElementById("toast");
+    const text = document.getElementById("toast-message");
+
+    text.innerText = message;
+
+    toast.classList.remove("hidden", "bg-green-500", "bg-red-500");
+    toast.classList.add(isError ? "bg-red-500" : "bg-green-500");
+
+    toast.style.opacity = "1";
+    toast.style.transform = "translateY(0)";
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(20px)";
+    }, 3000);
 }
 
 </script>
