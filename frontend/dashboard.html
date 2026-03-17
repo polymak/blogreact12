@@ -277,7 +277,7 @@
         // Load articles
         async function loadArticles() {
             try {
-                const response = await fetch('https://blogreact12-api.reatest.workers.dev/articles', {
+                const response = await
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
                     }
@@ -470,7 +470,7 @@
             }
 
             try {
-                const response = await fetch(`https://blogreact12-api.reatest.workers.dev/articles/${id}`, {
+                const response = await fetch(`https://blogreact12.pages.dev/articles/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
@@ -491,24 +491,11 @@
             }
         }
 
-        // Upload image to local API
-        async function uploadImage(file) {
-            const formData = new FormData();
-            formData.append("file", file);
-
-            const res = await fetch("/api/upload", {
-                method: "POST",
-                body: formData
-            });
-
-            const data = await res.json();
-            return data.url;
-        }
-
         // Form submission
         document.getElementById('article-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            const formData = new FormData();
             const title = document.getElementById('title').value.trim();
             const content = document.getElementById('content').value.trim();
             
@@ -523,71 +510,64 @@
                 return;
             }
 
-            let imageUrl = '';
+            formData.append('titre', title);
+            formData.append('contenu', content);
+            formData.append('auteur', 'Admin');
+            
             const imageInput = document.getElementById('image');
-            
-            // Upload image if selected
             if (imageInput.files[0]) {
-                showToast('Téléchargement de l\'image en cours...');
-                imageUrl = await uploadImage(imageInput.files[0]);
-                showToast('Image téléchargée avec succès');
+                formData.append('image', imageInput.files[0]);
             }
 
-            const articleData = {
-                titre: title,
-                contenu: content,
-                auteur: 'Admin'
-            };
-            
-            if (imageUrl) {
-                articleData.image = imageUrl;
-            }
-
-            const url = editingArticle 
-                ? `https://blogreact12-api.reatest.workers.dev/articles/${editingArticle.id}`
-                : 'https://blogreact12-api.reatest.workers.dev/articles';
-            
-            const method = editingArticle ? 'PUT' : 'POST';
-
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(articleData)
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success !== false) {
-                if (editingArticle) {
-                    // Update existing article
-                    const index = articles.findIndex(a => a.id === editingArticle.id);
-                    if (index !== -1) {
-                        articles[index] = result.article || result;
-                    }
-                    showToast('Article modifié avec succès', 'success');
-                } else {
-                    // Add new article
-                    articles.unshift(result.article || result);
-                    showToast('Article publié avec succès', 'success');
-                }
-
-                updateStats();
-                renderArticles(); // Refresh the articles list
-                showBlogList();
+            try {
+                const url = editingArticle 
+                    ? `https://blogreact12.pages.dev/articles/${editingArticle.id}`
+                    : 'https://blogreact12.pages.dev/articles';
                 
-                // Refresh the page after a short delay to ensure changes are visible
-                setTimeout(() => {
-                    if (!editingArticle) {
-                        // For new articles, refresh the page to show the latest content
-                        location.reload();
+                const method = editingArticle ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success !== false) {
+                    if (editingArticle) {
+                        // Update existing article
+                        const index = articles.findIndex(a => a.id === editingArticle.id);
+                        if (index !== -1) {
+                            articles[index] = result.article || result;
+                        }
+                        showToast('Article modifié avec succès', 'success');
+                    } else {
+                        // Add new article
+                        articles.unshift(result.article || result);
+                        showToast('Article publié avec succès', 'success');
                     }
-                }, 1500);
-            } else {
-                const errorMessage = result.error || result.message || 'Échec de l\'enregistrement de l\'article';
-                showToast('Erreur: ' + errorMessage, 'error');
+
+                    updateStats();
+                    renderArticles(); // Refresh the articles list
+                    showBlogList();
+                    
+                    // Refresh the page after a short delay to ensure changes are visible
+                    setTimeout(() => {
+                        if (!editingArticle) {
+                            // For new articles, refresh the page to show the latest content
+                            location.reload();
+                        }
+                    }, 1500);
+                } else {
+                    const errorMessage = result.error || result.message || 'Échec de l\'enregistrement de l\'article';
+                    showToast('Erreur: ' + errorMessage, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving article:', error);
+                showToast('Erreur réseau: Vérifiez que le serveur est démarré', 'error');
             }
         });
 
