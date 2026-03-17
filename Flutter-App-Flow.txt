@@ -4,7 +4,7 @@ FLUTTER APP USER FLOW DOCUMENTATION
 Cette documentation décrit le flux utilisateur complet de l'application Flutter BlogReact, basée sur l'API REST.
 
 BASE URL API: https://blogreact12-api.reatest.workers.dev
-BASE URL API: /api (relative to domain)
+BASE URL API: https://blogreact12-api.reatest.workers.dev/api
 
 ## 🚀 FLUX UTILISATEUR COMPLET
 
@@ -58,7 +58,7 @@ BASE URL API: /api (relative to domain)
 ```dart
 Future<void> loginUser(String username, String password) async {
   final response = await http.post(
-    Uri.parse('/api/login'),
+    Uri.parse('https://blogreact12-api.reatest.workers.dev/api/login'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({
       'username': username,
@@ -145,10 +145,63 @@ Future<void> loginUser(String username, String password) async {
     - Voir en ligne (ouvre dans navigateur)
 
 **Endpoints utilisés:**
-- `GET /api/articles` - Charger tous les articles
-- `GET /api/articles/search` - Recherche et filtrage
-- `PUT /articles/:id` - Mise à jour
-- `DELETE /articles/:id` - Suppression
+- `GET https://blogreact12-api.reatest.workers.dev/api/articles` - Charger tous les articles
+- `GET https://blogreact12-api.reatest.workers.dev/api/articles/search` - Recherche et filtrage
+- `PUT https://blogreact12-api.reatest.workers.dev/api/articles/:id` - Mise à jour
+- `DELETE https://blogreact12-api.reatest.workers.dev/api/articles/:id` - Suppression
+
+### 11. CONFIGURATION FLUTTER - URLS API
+
+**Configuration HTTP dans Flutter:**
+```dart
+const String BASE_URL = "https://blogreact12-api.reatest.workers.dev";
+const String API_BASE = "$BASE_URL/api";
+
+// Headers CORS
+final Map<String, String> headers = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+};
+```
+
+**Exemples de requêtes complètes:**
+```dart
+// Récupérer tous les articles
+Future<List<Article>> fetchArticles() async {
+  final response = await http.get(
+    Uri.parse('$API_BASE/articles'),
+    headers: headers,
+  );
+  // ... traitement réponse
+}
+
+// Récupérer un article par ID
+Future<Article> fetchArticle(int id) async {
+  final response = await http.get(
+    Uri.parse('$API_BASE/articles/$id'),
+    headers: headers,
+  );
+  // ... traitement réponse
+}
+
+// Incrémenter les vues
+Future<void> incrementViews(int articleId) async {
+  final response = await http.post(
+    Uri.parse('$API_BASE/articles/$articleId/views'),
+    headers: headers,
+  );
+  // ... traitement réponse
+}
+
+// Incrémenter les likes
+Future<void> incrementLikes(int articleId) async {
+  final response = await http.post(
+    Uri.parse('$API_BASE/articles/$articleId/likes'),
+    headers: headers,
+  );
+  // ... traitement réponse
+}
+```
 
 ### 7. CRÉATION/MODIFICATION D'ARTICLE
 
@@ -174,7 +227,7 @@ Future<void> loginUser(String username, String password) async {
 Future<String?> uploadImage(File imageFile) async {
   var request = http.MultipartRequest(
     'POST',
-    Uri.parse('/api/articles')
+    Uri.parse('https://blogreact12-api.reatest.workers.dev/api/articles')
   );
   
   request.files.add(
@@ -226,7 +279,7 @@ Future<String?> uploadImage(File imageFile) async {
   - Affichage en grille comme HomeScreen
   - Pagination (page suivante/précédente)
 
-**Endpoint:** `GET /api/articles/search?q=terme&category=cat&author=aut`
+**Endpoint:** `GET https://blogreact12-api.reatest.workers.dev/api/articles/search?q=terme&category=cat&author=aut`
 
 ### 10. GESTION DES CATÉGORIES
 
@@ -242,7 +295,7 @@ Future<String?> uploadImage(File imageFile) async {
   - Créer nouvelle catégorie (si admin)
   - Supprimer catégorie (si admin)
 
-**Endpoint:** `GET /api/categories`
+**Endpoint:** `GET https://blogreact12-api.reatest.workers.dev/api/categories`
 
 ## 🔄 FLUX COMPLET TYPE
 

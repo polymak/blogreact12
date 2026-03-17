@@ -27,10 +27,25 @@ class BlogReactApp extends StatelessWidget {
         '/': (context) => const HomeScreen(),
         '/login': (context) => const LoginScreen(),
         '/dashboard': (context) => DashboardScreen(
-          username: ModalRoute.of(context)?.settings.arguments as String,
+          username:
+              ModalRoute.of(context)?.settings.arguments as String? ?? 'Admin',
         ),
         '/article': (context) => ArticleDetailScreen(
-          article: ModalRoute.of(context)?.settings.arguments as Article,
+          article:
+              ModalRoute.of(context)?.settings.arguments as Article? ??
+              Article(
+                id: 0,
+                titre: 'Article non trouvé',
+                contenu: 'Le contenu de cet article n\'est pas disponible.',
+                auteur: 'Admin',
+                categorie: 'Non classé',
+                image:
+                    'https://via.placeholder.com/400x250?text=Article+Not+Found',
+                statut: 'draft',
+                dateCreation: DateTime.now(),
+                vues: 0,
+                likes: 0,
+              ),
         ),
         '/search': (context) => const SearchScreen(),
       },

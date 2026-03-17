@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/models/article.dart';
 import 'package:flutter_app/services/api_service.dart';
-import 'package:flutter_app/widgets/article_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ArticleDetailScreen extends StatefulWidget {
@@ -15,7 +14,7 @@ class ArticleDetailScreen extends StatefulWidget {
 
 class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
   late Article _article;
-  bool _isLoading = true;
+  final bool _isLoading = true;
 
   @override
   void initState() {
@@ -97,7 +96,8 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.network(
-                _article.image,
+                _article.image ??
+                    'https://via.placeholder.com/400x250?text=No+Image',
                 width: double.infinity,
                 height: 250,
                 fit: BoxFit.cover,
@@ -134,7 +134,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                _article.categorie,
+                _article.categorie ?? 'Non classé',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
@@ -147,7 +147,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
 
             // Title
             Text(
-              _article.titre,
+              _article.titre ?? 'Titre non disponible',
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
 
@@ -159,7 +159,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                 const Icon(Icons.person, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
                 Text(
-                  _article.auteur,
+                  _article.auteur ?? 'Admin',
                   style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const Spacer(),
@@ -176,7 +176,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
 
             // Content
             Text(
-              _article.contenu,
+              _article.contenu ?? 'Contenu non disponible',
               style: const TextStyle(fontSize: 16, height: 1.6),
               textAlign: TextAlign.justify,
             ),
@@ -228,7 +228,11 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(DateTime? date) {
+    if (date == null) {
+      return 'Date inconnue';
+    }
+
     final now = DateTime.now();
     final difference = now.difference(date);
 

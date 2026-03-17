@@ -225,288 +225,239 @@
         </div>
     </footer>
 
-    <script>
-        // Mobile Navigation Toggle
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
+<script>
 
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
+// ================= CONFIG =================
+const API = "https://blogreact12-api.reatest.workers.dev";
+
+// ================= MOBILE MENU =================
+const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+const mobileMenu = document.getElementById('mobile-menu');
+
+mobileMenuBtn.addEventListener('click', () => {
+    mobileMenu.classList.toggle('hidden');
+});
+
+// ================= GET ID =================
+const urlParams = new URLSearchParams(window.location.search);
+const articleId = urlParams.get('id');
+
+// ================= LOAD ARTICLE =================
+async function loadArticle() {
+
+    if (!articleId) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    try {
+
+        // 🔥 IMPORTANT: utiliser la liste puis filtrer (plus fiable)
+        const res = await fetch(`${API}/api/articles`);
+        const result = await res.json();
+
+        if (!result.success || !result.data) {
+            throw new Error("API error");
+        }
+
+        const article = result.data.find(a => a.id == articleId);
+
+        if (!article) throw new Error("Article not found");
+
+        console.log("ARTICLE:", article);
+
+        displayArticle(article);
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("article-content").innerHTML = `
+        <div class="text-center py-12">
+            <i class="fas fa-newspaper text-6xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">Article non trouvé</p>
+        </div>`;
+    }
+}
+
+// ================= FORMAT CONTENT =================
+function formatArticleContent(content) {
+
+    if (!content) return "";
+
+    return content
+        .split(/\n\s*\n/)
+        .filter(p => p.trim() !== "")
+        .map(p => `<p>${p.replace(/\n/g,"<br>")}</p>`)
+        .join("");
+}
+
+// ================= DISPLAY =================
+function displayArticle(article) {
+
+    // 🔥 FIX UNIVERSAL (IMPORTANT)
+    const titre = article.titre || article.title;
+    const contenu = article.contenu || article.content;
+    const categorie = article.categorie || article.category;
+    const auteur = article.auteur || article.author;
+
+    // TITLE
+    document.getElementById("article-title").textContent = titre;
+
+    // CONTENT
+    document.getElementById("article-content").innerHTML =
+        formatArticleContent(contenu);
+
+    // DATE
+    document.getElementById("article-date").textContent =
+        new Date(article.date).toLocaleDateString("fr-FR");
+
+    // CATEGORY
+    document.getElementById("article-category").textContent =
+        categorie || "Général";
+
+    // AUTHOR
+    document.getElementById("article-author").textContent =
+        auteur || "Admin";
+
+    // VIEWS / LIKES
+    document.getElementById("article-views").textContent =
+        article.views || 0;
+
+    document.getElementById("like-count").textContent =
+        article.likes || 0;
+
+    // ================= IMAGE FIX =================
+    let image = article.image;
+
+    if (!image) {
+        image = `https://picsum.photos/seed/${article.id}/800/400`;
+    } 
+    else if (!image.startsWith("http")) {
+        image = "https://blogreact12.pages.dev/" + image;
+    }
+
+    const img = document.getElementById("article-image");
+
+    img.src = image;
+    img.alt = titre;
+
+    img.onerror = () => {
+        img.src = `https://picsum.photos/seed/${article.id}/800/400`;
+    };
+
+    // ================= READ TIME =================
+    const readTime = Math.ceil(contenu.split(" ").length / 200);
+
+    document.getElementById("article-read-time").textContent =
+        `${readTime} min de lecture`;
+
+    // ================= RELATED =================
+    loadRelatedArticles(categorie, article.id);
+}
+
+// ================= RELATED ARTICLES =================
+async function loadRelatedArticles(category, currentId) {
+
+    try {
+
+        const res = await fetch(`${API}/api/articles`);
+        const result = await res.json();
+
+        const related = result.data
+            .filter(a => (a.category || a.categorie) === category && a.id != currentId)
+            .slice(0, 4);
+
+        const container = document.getElementById("related-articles");
+
+        if (!related.length) {
+            container.innerHTML = `<p class="text-gray-500 col-span-2 text-center py-8">Aucun article similaire</p>`;
+            return;
+        }
+
+        container.innerHTML = related.map(article => {
+
+            const titre = article.titre || article.title;
+            const contenu = article.contenu || article.content;
+
+            let image = article.image || "https://picsum.photos/400/250";
+
+            return `
+            <article onclick="viewArticle(${article.id})"
+                class="bg-gray-50 rounded-xl p-6 cursor-pointer hover:shadow-xl">
+
+                <img src="${image}" class="w-full h-40 object-cover rounded mb-3">
+
+                <h3 class="font-bold text-lg mb-2">${titre}</h3>
+
+                <p class="text-gray-600 text-sm mb-3">
+                    ${contenu.substring(0,120)}...
+                </p>
+
+                <div class="text-xs text-gray-400 flex justify-between">
+                    <span>${article.auteur || "Admin"}</span>
+                    <span>${new Date(article.date).toLocaleDateString()}</span>
+                </div>
+
+            </article>`;
+        }).join("");
+
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+// ================= NAVIGATION =================
+window.viewArticle = function(id) {
+    window.location.href = `article.html?id=${id}`;
+};
+
+// ================= LIKE =================
+const likeBtn = document.getElementById("like-btn");
+const likeCount = document.getElementById("like-count");
+
+likeBtn.addEventListener("click", () => {
+    likeBtn.classList.toggle("liked");
+
+    let count = parseInt(likeCount.textContent);
+
+    likeCount.textContent = likeBtn.classList.contains("liked")
+        ? count + 1
+        : count - 1;
+});
+
+// ================= SHARE =================
+document.getElementById("share-btn").addEventListener("click", () => {
+
+    if (navigator.share) {
+        navigator.share({
+            title: document.getElementById("article-title").textContent,
+            url: window.location.href
         });
+    } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Lien copié !");
+    }
+});
 
-        // Get article ID from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const articleId = urlParams.get('id');
+// ================= AUTH MENU =================
+function updateNavigationMenu() {
 
-        // Load article
-        async function loadArticle() {
-            if (!articleId) {
-                window.location.href = 'index.html';
-                return;
-            }
+    const token = localStorage.getItem("token");
 
-            try {
-                // Use the Worker API endpoint
-                const response = await fetch(`https://blogreact12-api.reatest.workers.dev/api/articles/${articleId}`);
-                if (!response.ok) {
-                    throw new Error('Article not found');
-                }
-                
-                const article = await response.json();
-                if (!article.success || !article.data) {
-                    throw new Error('Article not found');
-                }
-                
-                displayArticle(article.data);
-                
-            } catch (error) {
-                console.error('Error loading article:', error);
-                document.getElementById('article-content').innerHTML = `
-                    <div class="text-center py-12">
-                        <i class="fas fa-newspaper text-6xl text-gray-300 mb-4"></i>
-                        <p class="text-gray-500 text-lg">Article non trouvé</p>
-                        <button onclick="window.location.href='index.html'" class="mt-4 px-4 py-2 x-gradient text-white rounded-lg hover:bg-blue-700 transition-colors">
-                            Retour à l'accueil
-                        </button>
-                    </div>
-                `;
-            }
-        }
+    document.getElementById("menu-login").style.display =
+        token ? "none" : "inline-block";
 
-        // Format article content with proper paragraph breaks
-        function formatArticleContent(content) {
-            if (!content || typeof content !== 'string') {
-                return '';
-            }
-            
-            // Handle multiple types of line breaks and paragraph separators
-            return content
-                // Split on double line breaks (paragraph separators)
-                .split(/\n\s*\n/)
-                // Filter out empty paragraphs
-                .filter(paragraph => paragraph.trim().length > 0)
-                // Wrap each paragraph in <p> tags
-                .map(paragraph => {
-                    // Clean up extra whitespace and single line breaks within paragraphs
-                    const cleanedParagraph = paragraph
-                        .replace(/\n/g, '<br>') // Convert single line breaks to <br> tags
-                        .replace(/\s+/g, ' ')   // Normalize whitespace
-                        .trim();
-                    
-                    return `<p>${cleanedParagraph}</p>`;
-                })
-                // Join paragraphs with newlines for better readability
-                .join('\n');
-        }
+    document.getElementById("menu-admin").style.display =
+        token ? "inline-block" : "none";
+}
 
-        // Display article
-        function displayArticle(article) {
-            document.getElementById('article-title').textContent = article.titre;
-            
-            // Format the content with proper paragraph breaks
-            const formattedContent = formatArticleContent(article.contenu);
-            document.getElementById('article-content').innerHTML = formattedContent;
-            
-            document.getElementById('article-date').textContent = new Date(article.date).toLocaleDateString('fr-FR');
-            document.getElementById('article-category').textContent = article.categorie || 'Général';
-            document.getElementById('article-author').textContent = article.auteur || 'Admin';
-            document.getElementById('article-views').textContent = article.views || 0;
-            document.getElementById('like-count').textContent = article.likes || 0;
+// ================= INIT =================
+document.addEventListener("DOMContentLoaded", () => {
+    updateNavigationMenu();
+    loadArticle();
+});
 
-            // Set image with proper URL handling
-            if (article.image) {
-                let imageUrl;
-                
-                // Handle different image URL formats
-                if (article.image.startsWith('http')) {
-                    // External URL (like picsum.photos)
-                    imageUrl = article.image;
-                } else if (article.image.startsWith('/upload/')) {
-                    // Local upload image - construct full URL
-                    imageUrl = 'https://blogreact12.pages.dev' + article.image;
-                } else if (article.image.startsWith('upload/')) {
-                    // Local upload image without leading slash - construct full URL
-                    imageUrl = 'https://blogreact12.pages.dev/' + article.image;
-                } else {
-                    // Fallback for any other format
-                    imageUrl = 'https://blogreact12.pages.dev/upload/' + article.image;
-                }
-                
-                document.getElementById('article-image').src = imageUrl;
-                document.getElementById('article-image').alt = article.titre;
-                console.log('Article image URL:', imageUrl);
-                
-                // Add error handling for image loading
-                const imgElement = document.getElementById('article-image');
-                imgElement.onerror = function() {
-                    console.log('Image failed to load, using fallback');
-                    this.src = 'https://picsum.photos/seed/' + article.titre.replace(/\s+/g, '') + '/800/400';
-                    this.alt = 'Image par défaut';
-                };
-            } else {
-                document.getElementById('article-image').src = 'https://picsum.photos/seed/' + article.titre.replace(/\s+/g, '') + '/800/400';
-                document.getElementById('article-image').alt = 'Image par défaut';
-            }
-
-            // Calculate read time
-            const wordCount = article.contenu.split(' ').length;
-            const readTime = Math.ceil(wordCount / 200);
-            document.getElementById('article-read-time').textContent = `${readTime} min de lecture`;
-
-            // Load related articles
-            loadRelatedArticles(article.categorie, article.id);
-        }
-
-        // Load related articles
-        async function loadRelatedArticles(category, currentId) {
-            try {
-                // Use the Worker API endpoint for related articles
-                const response = await fetch(`https://blogreact12-api.reatest.workers.dev/api/articles/category/${category}`);
-                const result = await response.json();
-                
-                if (result.success && result.data && result.data.length > 0) {
-                    // Filter out the current article and limit to 4
-                    const relatedArticles = result.data
-                        .filter(article => article.id != currentId)
-                        .slice(0, 4);
-                    
-                    const container = document.getElementById('related-articles');
-                    if (relatedArticles.length > 0) {
-                        container.innerHTML = relatedArticles.map(article => {
-                            // Generate proper image URL for related articles
-                            let imageUrl;
-                            
-                            if (article.image) {
-                                if (article.image.startsWith('http')) {
-                                    // External URL (like picsum.photos)
-                                    imageUrl = article.image;
-                                } else if (article.image.startsWith('/upload/')) {
-                                    // Local upload image - construct full URL
-                                    imageUrl = 'https://blogreact12.pages.dev' + article.image;
-                                } else if (article.image.startsWith('upload/')) {
-                                    // Local upload image without leading slash - construct full URL
-                                    imageUrl = 'https://blogreact12.pages.dev/' + article.image;
-                                } else {
-                                    // Fallback for any other format
-                                    imageUrl = 'https://blogreact12.pages.dev/upload/' + article.image;
-                                }
-                            } else {
-                                // Placeholder image if no image
-                                imageUrl = 'https://via.placeholder.com/400x250/1a91da/ffffff?text=No+Image';
-                            }
-                            
-                            return `
-                                <article onclick="viewArticle('${article.id}')" class="bg-gray-50 rounded-xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 card-hover">
-                                    <img src="${imageUrl}" alt="${article.titre}" class="w-full h-40 object-cover rounded-lg mb-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">${article.titre}</h3>
-                                    <p class="text-gray-600 mb-4 line-clamp-3">${article.contenu.substring(0, 150)}...</p>
-                                    <div class="flex items-center justify-between text-sm text-gray-500">
-                                        <span>${new Date(article.date).toLocaleDateString('fr-FR')}</span>
-                                        <span>${article.auteur || 'Admin'}</span>
-                                    </div>
-                                </article>
-                            `;
-                        }).join('');
-                    } else {
-                        container.innerHTML = `
-                            <p class="text-gray-500 col-span-2 text-center py-8">Aucun article similaire trouvé</p>
-                        `;
-                    }
-                } else {
-                    document.getElementById('related-articles').innerHTML = `
-                        <p class="text-gray-500 col-span-2 text-center py-8">Erreur lors du chargement des articles similaires</p>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error loading related articles:', error);
-                document.getElementById('related-articles').innerHTML = `
-                    <p class="text-gray-500 col-span-2 text-center py-8">Erreur lors du chargement des articles similaires</p>
-                `;
-            }
-        }
-
-        // View article function
-        window.viewArticle = function(articleId) {
-            window.location.href = `article.html?id=${articleId}`;
-        };
-
-        // Like functionality
-        const likeBtn = document.getElementById('like-btn');
-        const likeCount = document.getElementById('like-count');
-
-        likeBtn.addEventListener('click', () => {
-            likeBtn.classList.toggle('liked');
-            const currentCount = parseInt(likeCount.textContent);
-            likeCount.textContent = likeBtn.classList.contains('liked') ? currentCount + 1 : currentCount - 1;
-        });
-
-        // Share functionality
-        const shareBtn = document.getElementById('share-btn');
-
-        shareBtn.addEventListener('click', () => {
-            shareBtn.style.transform = 'scale(1.1)';
-            setTimeout(() => {
-                shareBtn.style.transform = 'scale(1)';
-            }, 200);
-
-            if (navigator.share) {
-                navigator.share({
-                    title: document.getElementById('article-title').textContent,
-                    text: 'Découvrez cet article intéressant sur BlogReact !',
-                    url: window.location.href
-                });
-            } else {
-                // Fallback for browsers that don't support Web Share API
-                const url = window.location.href;
-                navigator.clipboard.writeText(url).then(() => {
-                    alert('URL copiée dans le presse-papier !');
-                });
-            }
-        });
-
-        // Check admin authentication and hide/show admin button
-        function checkAdminAuth() {
-            const adminBtn = document.querySelector('button[onclick*="dashboard.html"]');
-            if (!adminBtn) return;
-
-            // Check if user is authenticated (you can adjust this based on your auth method)
-            const token = localStorage.getItem('token');
-            const user = localStorage.getItem('user');
-            
-            // Show admin button only if user is authenticated
-            if (!token && !user) {
-                adminBtn.style.display = 'none';
-            }
-        }
-
-        // Update navigation menu based on authentication status
-        function updateNavigationMenu() {
-            const token = localStorage.getItem('token');
-            const loginMenu = document.getElementById('menu-login');
-            const adminMenu = document.getElementById('menu-admin');
-
-            if (!loginMenu || !adminMenu) {
-                console.warn('Navigation menu elements not found');
-                return;
-            }
-
-            if (token) {
-                // User logged in
-                loginMenu.style.display = 'none';
-                adminMenu.style.display = 'inline-block';
-            } else {
-                // User not logged in
-                loginMenu.style.display = 'inline-block';
-                adminMenu.style.display = 'none';
-            }
-        }
-
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', () => {
-            updateNavigationMenu();
-            checkAdminAuth();
-            loadArticle();
-        });
-    </script>
+</script>
 </body>
 </html>

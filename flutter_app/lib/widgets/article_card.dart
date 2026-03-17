@@ -23,7 +23,8 @@ class ArticleCard extends StatelessWidget {
                 top: Radius.circular(12),
               ),
               child: Image.network(
-                article.image,
+                article.image ??
+                    'https://via.placeholder.com/400x250?text=No+Image',
                 height: 160,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -67,7 +68,7 @@ class ArticleCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      article.categorie,
+                      article.categorie ?? 'Non classé',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -80,7 +81,7 @@ class ArticleCard extends StatelessWidget {
 
                   // Title
                   Text(
-                    article.titre,
+                    article.titre ?? 'Titre non disponible',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -98,7 +99,7 @@ class ArticleCard extends StatelessWidget {
                       const Icon(Icons.person, size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
-                        article.auteur,
+                        article.auteur ?? 'Admin',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,
@@ -160,7 +161,11 @@ class ArticleCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(DateTime? date) {
+    if (date == null) {
+      return 'Date inconnue';
+    }
+
     final now = DateTime.now();
     final difference = now.difference(date);
 
