@@ -1,253 +1,355 @@
 /**
- * Cloudflare Worker API + Frontend for BlogReact12
+ * BlogReact12 Worker API
+ * Cloudflare Workers + D1
  */
-
-import db from './db.js'
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Content-Type": "application/json"
-}
-
-/* ---------------- AUTH ---------------- */
-
-function authenticateToken(request) {
-  const authHeader = request.headers.get("Authorization")
-  const token = authHeader && authHeader.split(" ")[1]
-
-  if (!token) return false
-
-  return true
-}
+};
 
 /* ---------------- CORS ---------------- */
 
 function handleCORS(request) {
   if (request.method === "OPTIONS") {
-    return new Response(null, { headers: CORS_HEADERS })
+    return new Response(null, { headers: CORS_HEADERS });
   }
-  return null
+  return null;
 }
 
 /* ---------------- JSON RESPONSE ---------------- */
 
-function jsonResponse(data, status = 200) {
+function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: CORS_HEADERS
-  })
+  });
 }
 
-/* ---------------- API ROUTES ---------------- */
+/* ---------------- AUTH ---------------- */
 
-const routes = {
+function authenticateToken(request) {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader) return false;
 
-  "GET /api/articles": async () => {
-    try {
+  const token = authHeader.split(" ")[1];
+  if (token !== "demo-token") return false;
 
-      const [rows] = await db.execute(
-        "SELECT * FROM articles WHERE status='published' ORDER BY date DESC"
-      )
-
-      return jsonResponse({
-        success: true,
-        data: rows,
-        count: rows.length
-      })
-
-    } catch (e) {
-
-      return jsonResponse({
-        success:false,
-        error:"Erreur récupération articles"
-      },500)
-
-    }
-  },
-
-  "GET /api/articles/:id": async (req,params)=>{
-
-    try{
-
-      const [rows] = await db.execute(
-        "SELECT * FROM articles WHERE id=? AND status='published'",
-        [params.id]
-      )
-
-      if(rows.length===0){
-        return jsonResponse({
-          success:false,
-          error:"Article non trouvé"
-        },404)
-      }
-
-      return jsonResponse({
-        success:true,
-        data:rows[0]
-      })
-
-    }catch(e){
-
-      return jsonResponse({
-        success:false,
-        error:"Erreur serveur"
-      },500)
-
-    }
-
-  },
-
-  "POST /api/login": async request => {
-
-    try{
-
-      const body = await request.json()
-
-      const [rows] = await db.execute(
-        "SELECT * FROM users WHERE username=? AND password=?",
-        [body.username, body.password]
-      )
-
-      if(rows.length===0){
-
-        return jsonResponse({
-          success:false,
-          message:"Identifiants incorrects"
-        },401)
-
-      }
-
-      return jsonResponse({
-        success:true,
-        token:"demo-token"
-      })
-
-    }catch(e){
-
-      return jsonResponse({
-        success:false,
-        error:"Erreur login"
-      },500)
-
-    }
-
-  }
-
+  return true;
 }
 
 /* ---------------- ROUTE MATCHER ---------------- */
 
-function matchRoute(request){
+function matchRoute(request, routes) {
 
-  const url = new URL(request.url)
-  const path = url.pathname
+  const url = new URL(request.url);
+  const path = url.pathname;
 
-  for(const [pattern,handler] of Object.entries(routes)){
+  for (const [pattern, handler] of Object.entries(routes)) {
 
-    const [method,routePattern] = pattern.split(" ")
+    const [method, routePattern] = pattern.split(" ");
 
-    if(method !== request.method) continue
+    if (method !== request.method) continue;
 
-    const regex = new RegExp("^" + routePattern.replace(/:[^/]+/g,"([^/]+)") + "$")
+    const regex = new RegExp("^" + routePattern.replace(/:[^/]+/g, "([^/]+)") + "$");
 
-    const match = path.match(regex)
+    const match = path.match(regex);
 
-    if(match){
+    if (match) {
 
-      const params={}
-      const names = routePattern.match(/:([^/]+)/g)
+      const params = {};
+      const names = routePattern.match(/:([^/]+)/g);
 
-      if(names){
-        names.forEach((p,i)=>{
-          params[p.substring(1)] = match[i+1]
-        })
+      if (names) {
+        names.forEach((p, i) => {
+          params[p.substring(1)] = match[i + 1];
+        });
       }
 
-      return { handler, params }
-
+      return { handler, params };
     }
-
   }
 
-  return null
-
+  return null;
 }
 
-/* ---------------- FRONTEND ROUTER ---------------- */
-
-async function serveFrontend(request){
-
-  const url = new URL(request.url)
-
-  const routes = {
-    "/": "index.html",
-    "/index.html": "index.html",
-    "/login.html": "login.html",
-    "/dashboard.html": "dashboard.html",
-    "/article.html": "article.html"
-  }
-
-  if(routes[url.pathname]){
-
-    const file = routes[url.pathname]
-
-    return fetch(`https://452a54ac.blogreact12.pages.dev/${file}`)
-
-  }
-
-  return null
-
-}
-
-/* ---------------- MAIN FETCH ---------------- */
+/* ---------------- WORKER ---------------- */
 
 export default {
 
-  async fetch(request){
+  async fetch(request, env) {
 
-    const cors = handleCORS(request)
-    if(cors) return cors
+    const cors = handleCORS(request);
+    if (cors) return cors;
 
-    const url = new URL(request.url)
+    const url = new URL(request.url);
 
-    /* API ROUTES */
+    /* ---------------- API ROUTES ---------------- */
 
-    if(url.pathname.startsWith("/api")){
+    const routes = {
 
-      const match = matchRoute(request)
+      /* GET ARTICLES */
 
-      if(match){
+      "GET /api/articles": async () => {
 
-        try{
-          return await match.handler(request,match.params)
-        }catch(e){
-          return jsonResponse({
-            success:false,
-            error:"Erreur interne"
-          },500)
+        try {
+
+          const page = Number(url.searchParams.get("page") || 1);
+          const limit = 10;
+          const offset = (page - 1) * limit;
+
+          const { results } = await env.DB.prepare(
+            `SELECT * FROM articles
+             WHERE status='published'
+             ORDER BY date DESC
+             LIMIT ? OFFSET ?`
+          )
+          .bind(limit, offset)
+          .all();
+
+          return json({
+            success: true,
+            page,
+            data: results
+          });
+
+        } catch (e) {
+
+          return json({
+            success: false,
+            error: e.message
+          }, 500);
+
+        }
+
+      },
+
+      /* GET ARTICLE BY ID */
+
+      "GET /api/articles/:id": async (req, params) => {
+
+        try {
+
+          const { results } = await env.DB.prepare(
+            "SELECT * FROM articles WHERE id=?"
+          )
+          .bind(params.id)
+          .all();
+
+          if (!results.length) {
+            return json({
+              success: false,
+              error: "Article non trouvé"
+            }, 404);
+          }
+
+          return json({
+            success: true,
+            data: results[0]
+          });
+
+        } catch (e) {
+
+          return json({
+            success: false,
+            error: e.message
+          }, 500);
+
+        }
+
+      },
+
+      /* CREATE ARTICLE */
+
+      "POST /api/articles": async request => {
+
+        if (!authenticateToken(request)) {
+          return json({ error: "Unauthorized" }, 401);
+        }
+
+        try {
+
+          const body = await request.json();
+
+          const result = await env.DB.prepare(
+            `INSERT INTO articles
+            (titre, contenu, image, auteur, categorie, status)
+            VALUES (?, ?, ?, ?, ?, 'published')`
+          )
+          .bind(
+            body.titre,
+            body.contenu,
+            body.image || "",
+            body.auteur || "Admin",
+            body.categorie || "General"
+          )
+          .run();
+
+          return json({
+            success: true,
+            id: result.meta.last_row_id
+          });
+
+        } catch (e) {
+
+          return json({
+            success: false,
+            error: e.message
+          }, 500);
+
+        }
+
+      },
+
+      /* UPDATE ARTICLE */
+
+      "PUT /api/articles/:id": async (req, params) => {
+
+        if (!authenticateToken(req)) {
+          return json({ error: "Unauthorized" }, 401);
+        }
+
+        try {
+
+          const body = await req.json();
+
+          await env.DB.prepare(
+            `UPDATE articles
+            SET titre=?, contenu=?, image=?, categorie=?, updated_at=CURRENT_TIMESTAMP
+            WHERE id=?`
+          )
+          .bind(
+            body.titre,
+            body.contenu,
+            body.image,
+            body.categorie,
+            params.id
+          )
+          .run();
+
+          return json({
+            success: true,
+            message: "Article mis à jour"
+          });
+
+        } catch (e) {
+
+          return json({
+            success: false,
+            error: e.message
+          }, 500);
+
+        }
+
+      },
+
+      /* DELETE ARTICLE */
+
+      "DELETE /api/articles/:id": async (req, params) => {
+
+        if (!authenticateToken(req)) {
+          return json({ error: "Unauthorized" }, 401);
+        }
+
+        try {
+
+          await env.DB.prepare(
+            "DELETE FROM articles WHERE id=?"
+          )
+          .bind(params.id)
+          .run();
+
+          return json({
+            success: true,
+            message: "Article supprimé"
+          });
+
+        } catch (e) {
+
+          return json({
+            success: false,
+            error: e.message
+          }, 500);
+
+        }
+
+      },
+
+      /* LOGIN */
+
+      "POST /api/login": async request => {
+
+        try {
+
+          const body = await request.json();
+
+          const { results } = await env.DB.prepare(
+            "SELECT * FROM users WHERE username=? AND password=?"
+          )
+          .bind(body.username, body.password)
+          .all();
+
+          if (!results.length) {
+
+            return json({
+              success: false,
+              message: "Identifiants incorrects"
+            }, 401);
+
+          }
+
+          return json({
+            success: true,
+            token: "demo-token",
+            user: results[0]
+          });
+
+        } catch (e) {
+
+          return json({
+            success: false,
+            error: e.message
+          }, 500);
+
         }
 
       }
 
-      return jsonResponse({
-        success:false,
-        error:"API route inconnue"
-      },404)
+    };
+
+    if (url.pathname.startsWith("/api")) {
+
+      const match = matchRoute(request, routes);
+
+      if (match) {
+        return await match.handler(request, match.params);
+      }
+
+      return json({
+        success: false,
+        error: "Route API inconnue"
+      }, 404);
 
     }
 
-    /* FRONTEND ROUTES */
+    /* ---------------- FRONTEND ROUTER ---------------- */
 
-    const frontend = await serveFrontend(request)
+    const pages = {
+      "/": "index.html",
+      "/index.html": "index.html",
+      "/login.html": "login.html",
+      "/dashboard.html": "dashboard.html",
+      "/article.html": "article.html"
+    };
 
-    if(frontend) return frontend
+    if (pages[url.pathname]) {
+      return fetch(`https://blogreact12.pages.dev/${pages[url.pathname]}`);
+    }
 
-    return new Response("Page Not Found",{
-      status:404
-    })
+    return new Response("Page Not Found", { status: 404 });
 
   }
 
-}
+};

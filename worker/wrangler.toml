@@ -7,3 +7,8 @@ workers_dev = true
 compatibility_flags = [
   "nodejs_compat"
 ]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "blogreact-db"
+database_id = "0fe8d8e8-31c6-4fc6-a193-c8d0a52c1ff0"
