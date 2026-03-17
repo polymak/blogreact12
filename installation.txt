@@ -75,9 +75,9 @@ INSTALLATION ÉTAPE PAR ÉTAPE
      wrangler secret put DB_NAME
 
 8. ACCÉDER À L'APPLICATION
-   - Frontend : https://votre-projet.pages.dev
-   - API : https://votre-worker.workers.dev/api
-   - Page de connexion : https://votre-projet.pages.dev/login
+   - Frontend : https://blogreact12.pages.dev
+   - API : https://blogreact12-api.reatest.workers.dev/api
+   - Page de connexion : https://blogreact12.pages.dev/login
 
 9. ESPACE ADMINISTRATION
    - Page de connexion : /login (sur votre domaine Pages)

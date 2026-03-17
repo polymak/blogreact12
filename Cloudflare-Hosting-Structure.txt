@@ -167,16 +167,16 @@ wrangler secret put DB_NAME
 ## 🌍 URLS FINALES
 
 ### Frontend (Cloudflare Pages)
-- Accueil: `https://votre-projet.pages.dev/index.html`
-- Connexion: `https://votre-projet.pages.dev/login.html`
-- Dashboard: `https://votre-projet.pages.dev/dashboard.html`
-- Article: `https://votre-projet.pages.dev/article.html?id=14`
+- Accueil: `https://blogreact12.pages.dev/index.html`
+- Connexion: `https://blogreact12.pages.dev/login.html`
+- Dashboard: `https://blogreact12.pages.dev/dashboard.html`
+- Article: `https://blogreact12.pages.dev/article.html?id=14`
 
 ### API (Cloudflare Workers)
-- Base API: `https://votre-worker.workers.dev/api`
+- Base API: `https://blogreact12-api.reatest.workers.dev/api`
 - Exemples:
-  - `https://votre-worker.workers.dev/api/articles`
-  - `https://votre-worker.workers.dev/api/articles/1`
+  - `https://blogreact12-api.reatest.workers.dev/api/articles`
+  - `https://blogreact12-api.reatest.workers.dev/api/articles/1`
 
 ## 🔧 CONFIGURATION SUPPLÉMENTAIRE
 

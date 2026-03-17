@@ -3,7 +3,7 @@ API ENDPOINTS DOCUMENTATION - BLOGREACT
 
 Cette documentation décrit tous les endpoints API disponibles pour l'application BlogReact, spécialement conçus pour une intégration avec une application Flutter.
 
-BASE URL: https://your-worker.workers.dev
+BASE URL: https://blogreact12-api.reatest.workers.dev
 BASE URL: /api (relative to domain)
 
 ## 🔓 ENDPOINTS PUBLICS (Sans authentification)

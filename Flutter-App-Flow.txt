@@ -3,7 +3,7 @@ FLUTTER APP USER FLOW DOCUMENTATION
 
 Cette documentation décrit le flux utilisateur complet de l'application Flutter BlogReact, basée sur l'API REST.
 
-BASE URL API: https://your-worker.workers.dev
+BASE URL API: https://blogreact12-api.reatest.workers.dev
 BASE URL API: /api (relative to domain)
 
 ## 🚀 FLUX UTILISATEUR COMPLET
