@@ -1,10 +1,8 @@
 name = "blogreact12-api"
 main = "worker.js"
 compatibility_date = "2024-01-01"
-
 workers_dev = true
-
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = [ "nodejs_compat" ]
 
 [[d1_databases]]
 binding = "DB"
@@ -13,4 +11,4 @@ database_id = "0fe8d8e8-31c6-4fc6-a193-c8d0a52c1ff0"
 
 [[r2_buckets]]
 binding = "IMAGES"
-bucket_name = "blogreact-images"
+bucket_name = "all-file-images"
