@@ -250,7 +250,6 @@ let editingArticle = null;
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     loadArticles();
-
     document.getElementById("image").addEventListener("change", previewImage);
 });
 
@@ -262,22 +261,14 @@ function checkAuth() {
 
 // ================= LOAD =================
 async function loadArticles() {
-    try {
-        const res = await fetch(`${API_URL}/api/articles`);
-        const data = await res.json();
-
-        articles = data.data;
-
-        renderArticles();
-
-    } catch {
-        alert("Erreur chargement");
-    }
+    const res = await fetch(`${API_URL}/api/articles`);
+    const data = await res.json();
+    articles = data.data;
+    renderArticles();
 }
 
 // ================= UPLOAD =================
 async function uploadImage(file) {
-
     const formData = new FormData();
     formData.append("file", file);
 
@@ -290,9 +281,7 @@ async function uploadImage(file) {
     });
 
     const data = await res.json();
-
     if (!data.success) throw new Error();
-
     return data.url;
 }
 
@@ -313,6 +302,9 @@ function previewImage(e) {
 
 // ================= DELETE =================
 async function deleteArticle(id) {
+
+    if (!confirm("Supprimer cet article ?")) return;
+
     await fetch(`${API_URL}/api/articles/${id}`, {
         method: "DELETE",
         headers: {
@@ -323,6 +315,26 @@ async function deleteArticle(id) {
     loadArticles();
 }
 
+// ================= EDIT =================
+function handleEdit(id) {
+
+    const article = articles.find(a => a.id == id);
+
+    editingArticle = article;
+
+    document.getElementById("title").value = article.titre;
+    document.getElementById("content").value = article.contenu;
+
+    if (article.image) {
+        document.getElementById("preview-img").src = article.image;
+        document.getElementById("image-preview").classList.remove("hidden");
+    }
+
+    document.getElementById("form-title").innerText = "Modifier Article";
+
+    showAddForm();
+}
+
 // ================= SAVE =================
 document.getElementById('article-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -330,7 +342,7 @@ document.getElementById('article-form').addEventListener('submit', async (e) => 
     const titre = document.getElementById('title').value;
     const contenu = document.getElementById('content').value;
 
-    let image = "";
+    let image = editingArticle ? editingArticle.image : "";
 
     const file = document.getElementById('image').files[0];
 
@@ -342,18 +354,38 @@ document.getElementById('article-form').addEventListener('submit', async (e) => 
 
         const payload = { titre, contenu, image };
 
-        await fetch(`${API_URL}/api/articles`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + localStorage.getItem("auth_token")
-            },
-            body: JSON.stringify(payload)
-        });
+        if (editingArticle) {
 
-        alert("Article publié");
+            await fetch(`${API_URL}/api/articles/${editingArticle.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + localStorage.getItem("auth_token")
+                },
+                body: JSON.stringify(payload)
+            });
+
+            alert("Article modifié");
+
+        } else {
+
+            await fetch(`${API_URL}/api/articles`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + localStorage.getItem("auth_token")
+                },
+                body: JSON.stringify(payload)
+            });
+
+            alert("Article publié");
+        }
+
+        editingArticle = null;
 
         document.getElementById("article-form").reset();
+        document.getElementById("image-preview").classList.add("hidden");
+
         loadArticles();
         showBlogList();
 
@@ -370,14 +402,23 @@ function renderArticles() {
     container.innerHTML = articles.map(a => `
         <div class="bg-gray-50 p-4 rounded-lg flex gap-4 items-center">
 
-            ${a.image ? `<img src="${a.image}" class="w-32 h-32 object-cover rounded">` : ""}
+            ${a.image ? `<img src="${a.image}" class="w-32 h-32 object-cover rounded-lg">` : ""}
 
-            <div>
-                <h3 class="font-bold">${a.titre}</h3>
-                <p>${a.contenu}</p>
+            <div class="flex-1">
+                <h3 class="font-bold text-lg">${a.titre}</h3>
+                <p class="text-sm text-gray-600">${a.contenu}</p>
 
-                <button onclick="deleteArticle(${a.id})">Delete</button>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="handleEdit(${a.id})" class="bg-blue-500 text-white px-3 py-1 rounded">
+                        Edit
+                    </button>
+
+                    <button onclick="deleteArticle(${a.id})" class="bg-red-500 text-white px-3 py-1 rounded">
+                        Delete
+                    </button>
+                </div>
             </div>
+
         </div>
     `).join('');
 }
