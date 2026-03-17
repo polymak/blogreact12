@@ -241,19 +241,9 @@
                 // Simulate API call
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 
-                // Check credentials (Admin/Admin)
-                if (email === 'admin@blogreact.com' && password === 'Admin123') {
-                    // Simulate successful login
-                    localStorage.setItem('auth_token', 'fake-jwt-token');
-                    showSuccess();
-                    
-                    // Redirect after success
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 2000);
-                } else {
-                    showError('Email ou mot de passe incorrect');
-                }
+                // Authentication will be handled by the server
+                // For security reasons, credentials are not stored in client-side code
+                showError('Veuillez contacter l\'administrateur pour accéder au tableau de bord');
                 
             } catch (error) {
                 showError('Erreur de connexion. Veuillez réessayer.');

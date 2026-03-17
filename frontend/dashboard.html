@@ -277,7 +277,7 @@
         // Load articles
         async function loadArticles() {
             try {
-                const response = await fetch('http://localhost:3000/articles', {
+                const response = await fetch('https://blogreact12-api.reatest.workers.dev/articles', {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
                     }
@@ -344,7 +344,7 @@
                             </div>
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">${article.titre}</h3>
                             <p class="text-gray-600 mb-4 line-clamp-2">${article.contenu}</p>
-                            ${article.image ? `<img src="${article.image.startsWith('http') ? article.image : 'http://localhost:3000' + article.image}" alt="${article.titre}" class="w-20 h-20 object-cover rounded-lg mb-4">` : ''}
+                            ${article.image ? `<img src="${article.image.startsWith('http') ? article.image : 'https://blogreact12.pages.dev' + article.image}" alt="${article.titre}" class="w-20 h-20 object-cover rounded-lg mb-4">` : ''}
                         </div>
                         <div class="flex flex-col gap-2">
                             <button onclick="handleEdit('${article.id}')" class="edit-btn px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors cursor-pointer">
@@ -446,7 +446,7 @@
             
             if (article.image) {
                 // Gérer correctement l'URL de l'image
-                const imageUrl = article.image.startsWith('http') ? article.image : 'http://localhost:3000' + article.image;
+                const imageUrl = article.image.startsWith('http') ? article.image : 'https://blogreact12.pages.dev' + article.image;
                 document.getElementById('preview-img').src = imageUrl;
                 document.getElementById('image-preview').classList.remove('hidden');
                 console.log('Image preview URL:', imageUrl);
@@ -470,7 +470,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:3000/articles/${id}`, {
+                const response = await fetch(`https://blogreact12-api.reatest.workers.dev/articles/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
@@ -521,8 +521,8 @@
 
             try {
                 const url = editingArticle 
-                    ? `http://localhost:3000/articles/${editingArticle.id}`
-                    : 'http://localhost:3000/articles';
+                    ? `https://blogreact12-api.reatest.workers.dev/articles/${editingArticle.id}`
+                    : 'https://blogreact12-api.reatest.workers.dev/articles';
                 
                 const method = editingArticle ? 'PUT' : 'POST';
 
