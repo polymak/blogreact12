@@ -85,28 +85,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
             leading: const Icon(Icons.list),
             title: const Text('Liste des articles'),
             onTap: () {
-              Navigator.pushNamed(context, '/article-list');
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/articles');
             },
           ),
           ListTile(
             leading: const Icon(Icons.add),
             title: const Text('Ajouter article'),
             onTap: () {
-              Navigator.pushNamed(context, '/article-form');
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/add-article');
             },
           ),
           ListTile(
             leading: const Icon(Icons.category),
             title: const Text('Catégories'),
             onTap: () {
-              Navigator.pushNamed(context, '/categories');
+              Navigator.pop(context);
+              // Navigator.pushNamed(context, '/categories');
             },
           ),
           ListTile(
             leading: const Icon(Icons.analytics),
             title: const Text('Statistiques'),
             onTap: () {
-              Navigator.pushNamed(context, '/analytics');
+              Navigator.pop(context);
+              // Navigator.pushNamed(context, '/analytics');
             },
           ),
           const Divider(),

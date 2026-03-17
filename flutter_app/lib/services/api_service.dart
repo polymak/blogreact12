@@ -106,4 +106,59 @@ class ApiService {
       throw Exception('Failed to increment likes');
     }
   }
+
+  static Future<Article> createArticle(Map<String, dynamic> articleData) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/articles'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(articleData),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return Article.fromJson(data);
+      } else {
+        throw Exception('Failed to create article: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error creating article: $e');
+    }
+  }
+
+  static Future<Article> updateArticle(
+    int articleId,
+    Map<String, dynamic> articleData,
+  ) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/articles/$articleId'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(articleData),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return Article.fromJson(data);
+      } else {
+        throw Exception('Failed to update article: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error updating article: $e');
+    }
+  }
+
+  static Future<void> deleteArticle(int articleId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/articles/$articleId'),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to delete article: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error deleting article: $e');
+    }
+  }
 }

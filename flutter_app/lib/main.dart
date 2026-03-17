@@ -4,6 +4,8 @@ import 'package:flutter_app/screens/login_screen.dart';
 import 'package:flutter_app/screens/dashboard_screen.dart';
 import 'package:flutter_app/screens/article_detail_screen.dart';
 import 'package:flutter_app/screens/search_screen.dart';
+import 'package:flutter_app/screens/article_list_screen.dart';
+import 'package:flutter_app/screens/article_form_screen.dart';
 import 'package:flutter_app/models/article.dart';
 
 void main() {
@@ -26,10 +28,18 @@ class BlogReactApp extends StatelessWidget {
       routes: {
         '/': (context) => const HomeScreen(),
         '/login': (context) => const LoginScreen(),
-        '/dashboard': (context) => DashboardScreen(
-          username:
-              ModalRoute.of(context)?.settings.arguments as String? ?? 'Admin',
-        ),
+        '/dashboard': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return DashboardScreen(
+            username: args != null ? args as String : 'Admin',
+          );
+        },
+        '/articles': (context) => const ArticleListScreen(),
+        '/add-article': (context) => const ArticleFormScreen(),
+        '/edit-article': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return ArticleFormScreen(article: args as Article?);
+        },
         '/article': (context) => ArticleDetailScreen(
           article:
               ModalRoute.of(context)?.settings.arguments as Article? ??
