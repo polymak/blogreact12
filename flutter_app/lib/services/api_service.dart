@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_app/models/article.dart';
 
@@ -159,6 +160,52 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Error deleting article: $e');
+    }
+  }
+
+  static Future<Article> createArticleWithImage({
+    required String title,
+    required String content,
+    required File imageFile,
+  }) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/articles'),
+      );
+
+      // Add form fields
+      request.fields['titre'] = title;
+      request.fields['contenu'] = content;
+      request.fields['auteur'] = 'Admin';
+      request.fields['statut'] = 'published';
+
+      // Add image file
+      final imageStream = http.ByteStream(imageFile.openRead());
+      final imageSize = await imageFile.length();
+
+      final multipartFile = http.MultipartFile(
+        'image',
+        imageStream,
+        imageSize,
+        filename: imageFile.path.split('/').last,
+      );
+
+      request.files.add(multipartFile);
+
+      final response = await request.send();
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final responseString = await response.stream.bytesToString();
+        final data = jsonDecode(responseString);
+        return Article.fromJson(data);
+      } else {
+        throw Exception(
+          'Failed to create article with image: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Error creating article with image: $e');
     }
   }
 }

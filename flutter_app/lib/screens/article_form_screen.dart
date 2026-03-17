@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/models/article.dart';
 import 'package:flutter_app/services/api_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class ArticleFormScreen extends StatefulWidget {
   final Article? article;
@@ -15,9 +17,8 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
-  final _imageController = TextEditingController();
-  final _categoryController = TextEditingController();
 
+  XFile? _selectedImage;
   bool _isLoading = false;
   String? _error;
 
@@ -28,8 +29,7 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
     if (widget.article != null) {
       _titleController.text = widget.article!.titre ?? '';
       _contentController.text = widget.article!.contenu ?? '';
-      _imageController.text = widget.article!.image ?? '';
-      _categoryController.text = widget.article!.categorie ?? '';
+      // Note: Image handling for existing articles would need API support
     }
   }
 
@@ -37,40 +37,65 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
-    _imageController.dispose();
-    _categoryController.dispose();
     super.dispose();
   }
 
-  Future<void> _saveArticle() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  Future<void> _pickImage() async {
+    final imagePicker = ImagePicker();
+    final pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
 
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = pickedFile;
+      });
+    }
+  }
+
+  Future<void> _saveArticle() async {
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
-      final articleData = {
-        'titre': _titleController.text.trim(),
-        'contenu': _contentController.text.trim(),
-        'image': _imageController.text.trim(),
-        'categorie': _categoryController.text.trim(),
-        'auteur': 'Admin', // Could be dynamic based on logged user
-        'statut': 'published',
-      };
+      // Build request data with default values
+      final title = _titleController.text.trim().isEmpty
+          ? "Untitled"
+          : _titleController.text.trim();
+      final content = _contentController.text.trim();
 
       if (widget.article != null) {
         // Update existing article
+        final articleData = {
+          'titre': title,
+          'contenu': content,
+          'auteur': 'Admin',
+          'statut': 'published',
+        };
+
         await ApiService.updateArticle(widget.article!.id, articleData);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Article mis à jour avec succès')),
         );
       } else {
         // Create new article
-        await ApiService.createArticle(articleData);
+        if (_selectedImage != null) {
+          // Use MultipartRequest for image upload
+          await ApiService.createArticleWithImage(
+            title: title,
+            content: content,
+            imageFile: File(_selectedImage!.path),
+          );
+        } else {
+          // Normal POST request without image
+          final articleData = {
+            'titre': title,
+            'contenu': content,
+            'auteur': 'Admin',
+            'statut': 'published',
+          };
+          await ApiService.createArticle(articleData);
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Article créé avec succès')),
         );
@@ -111,54 +136,105 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                   labelText: 'Titre',
                   prefixIcon: Icon(Icons.title),
                   border: OutlineInputBorder(),
+                  hintText: 'Titre de l\'article (optionnel)',
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer un titre';
-                  }
-                  if (value.length < 3) {
-                    return 'Le titre doit contenir au moins 3 caractères';
-                  }
-                  return null;
-                },
+                // No validation - field is optional
               ),
               const SizedBox(height: 16),
 
-              // Category Field
-              TextFormField(
-                controller: _categoryController,
-                decoration: const InputDecoration(
-                  labelText: 'Catégorie',
-                  prefixIcon: Icon(Icons.category),
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer une catégorie';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+              // Image Upload
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Image', style: Theme.of(context).textTheme.labelLarge),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    onPressed: _pickImage,
+                    icon: const Icon(Icons.image),
+                    label: const Text('Choisir une image'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
 
-              // Image URL Field
-              TextFormField(
-                controller: _imageController,
-                decoration: const InputDecoration(
-                  labelText: 'URL de l\'image',
-                  prefixIcon: Icon(Icons.image),
-                  border: OutlineInputBorder(),
-                  hintText: 'https://example.com/image.jpg',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer une URL d\'image';
-                  }
-                  if (!value.startsWith('http')) {
-                    return 'Veuillez entrer une URL valide';
-                  }
-                  return null;
-                },
+                  // Image Preview
+                  if (_selectedImage != null)
+                    Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(_selectedImage!.path),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    )
+                  else if (widget.article?.image != null &&
+                      widget.article?.image!.isNotEmpty == true)
+                    Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          widget.article!.image!,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value:
+                                    loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  size: 40,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Aucune image sélectionnée',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 16),
 
@@ -172,15 +248,7 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                   hintText: 'Contenu de l\'article...',
                 ),
                 maxLines: 8,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer le contenu de l\'article';
-                  }
-                  if (value.length < 10) {
-                    return 'Le contenu doit contenir au moins 10 caractères';
-                  }
-                  return null;
-                },
+                // No validation - field is optional
               ),
               const SizedBox(height: 20),
 
