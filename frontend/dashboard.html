@@ -239,374 +239,187 @@
         <span id="toast-message">Action réussie !</span>
     </div>
 
-    <script>
-        // State management
-        let articles = [];
-        let editingArticle = null;
+<script>
 
-        // Mobile Navigation Toggle
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
+const API_URL = "https://blogreact12-api.reatest.workers.dev";
 
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
+// State
+let articles = [];
+let editingArticle = null;
+
+// INIT
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
+    loadArticles();
+});
+
+// AUTH
+function checkAuth() {
+    const token = localStorage.getItem('auth_token');
+    if (!token) window.location.href = 'login.html';
+}
+
+// ================= LOAD ARTICLES =================
+async function loadArticles() {
+    try {
+        const res = await fetch(`${API_URL}/api/articles`);
+        const data = await res.json();
+
+        if (!data.success) throw new Error();
+
+        articles = data.data;
+
+        updateStats();
+        renderArticles();
+
+    } catch (err) {
+        showToast("Erreur chargement articles", "error");
+    }
+}
+
+// ================= DELETE =================
+async function deleteArticle(id) {
+    if (!confirm("Supprimer ?")) return;
+
+    await fetch(`${API_URL}/api/articles/${id}`, {
+        method: "DELETE",
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("auth_token")
+        }
+    });
+
+    loadArticles();
+}
+
+// ================= SAVE (FIX PRINCIPAL) =================
+document.getElementById('article-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const titre = document.getElementById('title').value;
+    const contenu = document.getElementById('content').value;
+
+    // 👉 image simple (URL placeholder pour éviter bug)
+    let image = "";
+
+    if (document.getElementById('preview-img').src) {
+        image = document.getElementById('preview-img').src;
+    }
+
+    const payload = {
+        titre,
+        contenu,
+        image,
+        auteur: "Admin",
+        categorie: "General"
+    };
+
+    try {
+
+        const url = editingArticle
+            ? `${API_URL}/api/articles/${editingArticle.id}`
+            : `${API_URL}/api/articles`;
+
+        const method = editingArticle ? "PUT" : "POST";
+
+        const res = await fetch(url, {
+            method,
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + localStorage.getItem("auth_token")
+            },
+            body: JSON.stringify(payload)
         });
 
-        // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuth();
-            loadArticles();
-        });
+        const data = await res.json();
 
-        // Authentication check
-        function checkAuth() {
-            const token = localStorage.getItem('auth_token');
-            if (!token) {
-                window.location.href = 'login.html';
-            }
-        }
+        if (!data.success) throw new Error();
 
-        // Logout function
-        function logout() {
-            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                localStorage.removeItem('auth_token');
-                window.location.href = 'login.html';
-            }
-        }
+        showToast(editingArticle ? "Article modifié" : "Article publié");
 
-        // Load articles
-        async function loadArticles() {
-            try {
-                const response = await
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Erreur lors du chargement des articles');
-                }
-                
-                articles = await response.json();
-                
-                updateStats();
-                renderArticles();
-                
-            } catch (error) {
-                console.error('Error loading articles:', error);
-                showToast('Erreur lors du chargement des articles', 'error');
-            }
-        }
+        editingArticle = null;
 
-        // Update statistics
-        function updateStats() {
-            document.getElementById('total-articles').textContent = articles.length;
-            
-            const today = new Date().toDateString();
-            const todayArticles = articles.filter(article => 
-                new Date(article.date).toDateString() === today
-            );
-            document.getElementById('today-articles').textContent = todayArticles.length;
-        }
+        loadArticles();
+        showBlogList();
 
-        // Render articles list
-        function renderArticles(searchTerm = '') {
-            const container = document.getElementById('articles-container');
-            let filteredArticles = articles;
+    } catch (err) {
+        showToast("Erreur sauvegarde", "error");
+    }
+});
 
-            if (searchTerm) {
-                filteredArticles = articles.filter(article => 
-                    article.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    article.contenu.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-            }
+// ================= EDIT =================
+function handleEdit(id) {
+    const article = articles.find(a => a.id == id);
+    if (!article) return;
 
-            if (filteredArticles.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-12">
-                        <i class="fas fa-newspaper text-6xl text-gray-300 mb-4"></i>
-                        <p class="text-gray-500 text-lg">Aucun article trouvé</p>
-                    </div>
-                `;
-                return;
-            }
+    editingArticle = article;
 
-            container.innerHTML = filteredArticles.map(article => `
-                <div class="article-card bg-gray-50 rounded-lg p-4 card-hover transition-all duration-300 animate-fade-in">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-4 mb-2">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                    <i class="fas fa-calendar-alt mr-2"></i>
-                                    ${new Date(article.date).toLocaleDateString('fr-FR')}
-                                </span>
-                                <span class="text-sm text-gray-500">${article.author || 'Admin'}</span>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">${article.titre}</h3>
-                            <p class="text-gray-600 mb-4 line-clamp-2">${article.contenu}</p>
-                            ${article.image ? `<img src="${article.image.startsWith('http') ? article.image : 'https://blogreact12.pages.dev' + article.image}" alt="${article.titre}" class="w-20 h-20 object-cover rounded-lg mb-4">` : ''}
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <button onclick="handleEdit('${article.id}')" class="edit-btn px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors cursor-pointer">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="handleDelete('${article.id}')" class="delete-btn px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors cursor-pointer">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            
-            // Add event listeners for dynamically created buttons
-            setTimeout(() => {
-                const editButtons = container.querySelectorAll('.edit-btn');
-                const deleteButtons = container.querySelectorAll('.delete-btn');
-                
-                editButtons.forEach((btn, index) => {
-                    const article = filteredArticles[index];
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        handleEdit(article.id);
-                    });
-                });
-                
-                deleteButtons.forEach((btn, index) => {
-                    const article = filteredArticles[index];
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        handleDelete(article.id);
-                    });
-                });
-            }, 100);
-        }
+    document.getElementById('title').value = article.titre;
+    document.getElementById('content').value = article.contenu;
 
-        // Handle edit with better error handling
-        function handleEdit(id) {
-            try {
-                console.log('Editing article with ID:', id);
-                console.log('Articles array:', articles);
-                editArticle(id);
-            } catch (error) {
-                console.error('Error editing article:', error);
-                showToast('Erreur lors de l\'édition de l\'article', 'error');
-            }
-        }
+    if (article.image) {
+        document.getElementById('preview-img').src = article.image;
+        document.getElementById('image-preview').classList.remove('hidden');
+    }
 
-        // Handle delete with better error handling
-        function handleDelete(id) {
-            try {
-                deleteArticle(id);
-            } catch (error) {
-                console.error('Error deleting article:', error);
-                showToast('Erreur lors de la suppression de l\'article', 'error');
-            }
-        }
+    showAddForm();
+}
 
-        // Search articles
-        function searchArticles() {
-            const searchTerm = document.getElementById('search-input').value;
-            renderArticles(searchTerm);
-        }
+// ================= RENDER =================
+function renderArticles() {
 
-        // Show blog list
-        function showBlogList() {
-            document.getElementById('blog-list').classList.remove('hidden');
-            document.getElementById('add-form').classList.add('hidden');
-            renderArticles();
-        }
+    const container = document.getElementById('articles-container');
 
-        // Show add form
-        function showAddForm() {
-            document.getElementById('blog-list').classList.add('hidden');
-            document.getElementById('add-form').classList.remove('hidden');
-            // Ne pas réinitialiser le formulaire si on est en mode édition
-            if (!editingArticle) {
-                document.getElementById('form-title').textContent = 'Ajouter un Article';
-                document.getElementById('submit-btn-text').textContent = 'Publier';
-                document.getElementById('article-form').reset();
-                document.getElementById('article-id').value = '';
-                document.getElementById('image-preview').classList.add('hidden');
-            } else {
-                document.getElementById('form-title').textContent = 'Modifier l\'Article';
-                document.getElementById('submit-btn-text').textContent = 'Mettre à jour';
-            }
-        }
+    container.innerHTML = articles.map(a => `
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-bold">${a.titre}</h3>
+            <p>${a.contenu}</p>
 
-        // Edit article
-        function editArticle(id) {
-            const article = articles.find(a => a.id === id);
-            if (!article) return;
+            <div class="flex gap-2 mt-2">
+                <button onclick="handleEdit(${a.id})" class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button>
+                <button onclick="deleteArticle(${a.id})" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
 
-            editingArticle = article;
-            document.getElementById('form-title').textContent = 'Modifier l\'Article';
-            document.getElementById('article-id').value = article.id;
-            document.getElementById('title').value = article.titre;
-            document.getElementById('content').value = article.contenu;
-            
-            if (article.image) {
-                // Gérer correctement l'URL de l'image
-                const imageUrl = article.image.startsWith('http') ? article.image : 'https://blogreact12.pages.dev' + article.image;
-                document.getElementById('preview-img').src = imageUrl;
-                document.getElementById('image-preview').classList.remove('hidden');
-                console.log('Image preview URL:', imageUrl);
-            } else {
-                document.getElementById('image-preview').classList.add('hidden');
-            }
+// ================= STATS =================
+function updateStats() {
+    document.getElementById('total-articles').innerText = articles.length;
+}
 
-            showAddForm();
-        }
+// ================= UI =================
+function showBlogList() {
+    document.getElementById('blog-list').classList.remove('hidden');
+    document.getElementById('add-form').classList.add('hidden');
+}
 
-        // Cancel edit
-        function cancelEdit() {
-            editingArticle = null;
-            showBlogList();
-        }
+function showAddForm() {
+    document.getElementById('blog-list').classList.add('hidden');
+    document.getElementById('add-form').classList.remove('hidden');
+}
 
-        // Delete article
-        async function deleteArticle(id) {
-            if (!confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
-                return;
-            }
+function logout() {
+    localStorage.removeItem("auth_token");
+    window.location.href = "login.html";
+}
 
-            try {
-                const response = await fetch(`https://blogreact12.pages.dev/articles/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-                    }
-                });
+// ================= TOAST =================
+function showToast(msg, type = "success") {
+    const toast = document.getElementById('toast');
+    const text = document.getElementById('toast-message');
 
-                if (response.ok) {
-                    articles = articles.filter(a => a.id !== id);
-                    updateStats();
-                    renderArticles();
-                    showToast('Article supprimé avec succès');
-                } else {
-                    throw new Error('Failed to delete article');
-                }
-            } catch (error) {
-                console.error('Error deleting article:', error);
-                showToast('Erreur lors de la suppression', 'error');
-            }
-        }
+    text.innerText = msg;
 
-        // Form submission
-        document.getElementById('article-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+    toast.classList.remove('hidden');
+    toast.classList.remove('translate-y-10');
 
-            const formData = new FormData();
-            const title = document.getElementById('title').value.trim();
-            const content = document.getElementById('content').value.trim();
-            
-            // Validation frontend
-            if (!title) {
-                showToast('Veuillez saisir un titre', 'error');
-                return;
-            }
-            
-            if (!content) {
-                showToast('Veuillez saisir le contenu', 'error');
-                return;
-            }
+    toast.classList.add(type === "error" ? "bg-red-500" : "bg-green-500");
 
-            formData.append('titre', title);
-            formData.append('contenu', content);
-            formData.append('auteur', 'Admin');
-            
-            const imageInput = document.getElementById('image');
-            if (imageInput.files[0]) {
-                formData.append('image', imageInput.files[0]);
-            }
+    setTimeout(() => {
+        toast.classList.add('translate-y-10');
+    }, 3000);
+}
 
-            try {
-                const url = editingArticle 
-                    ? `https://blogreact12.pages.dev/articles/${editingArticle.id}`
-                    : 'https://blogreact12.pages.dev/articles';
-                
-                const method = editingArticle ? 'PUT' : 'POST';
-
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-                    },
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (response.ok && result.success !== false) {
-                    if (editingArticle) {
-                        // Update existing article
-                        const index = articles.findIndex(a => a.id === editingArticle.id);
-                        if (index !== -1) {
-                            articles[index] = result.article || result;
-                        }
-                        showToast('Article modifié avec succès', 'success');
-                    } else {
-                        // Add new article
-                        articles.unshift(result.article || result);
-                        showToast('Article publié avec succès', 'success');
-                    }
-
-                    updateStats();
-                    renderArticles(); // Refresh the articles list
-                    showBlogList();
-                    
-                    // Refresh the page after a short delay to ensure changes are visible
-                    setTimeout(() => {
-                        if (!editingArticle) {
-                            // For new articles, refresh the page to show the latest content
-                            location.reload();
-                        }
-                    }, 1500);
-                } else {
-                    const errorMessage = result.error || result.message || 'Échec de l\'enregistrement de l\'article';
-                    showToast('Erreur: ' + errorMessage, 'error');
-                }
-            } catch (error) {
-                console.error('Error saving article:', error);
-                showToast('Erreur réseau: Vérifiez que le serveur est démarré', 'error');
-            }
-        });
-
-        // Image preview
-        document.getElementById('image').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('preview-img').src = e.target.result;
-                    document.getElementById('image-preview').classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Remove image
-        function removeImage() {
-            document.getElementById('image').value = '';
-            document.getElementById('image-preview').classList.add('hidden');
-        }
-
-        // Toast notification
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-            
-            toastMessage.textContent = message;
-            toast.classList.remove('hidden', 'translate-y-10', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-            
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-10', 'opacity-0');
-                setTimeout(() => {
-                    toast.classList.add('hidden');
-                }, 300);
-            }, 3000);
-        }
-    </script>
+</script>
 </body>
 </html>
